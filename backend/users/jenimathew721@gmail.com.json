@@ -1,0 +1,62 @@
+[
+    {
+        "username": "jenimathew721@gmail.com",
+        "password": "j"
+    },
+    {
+        "name": "Xiao Yuan",
+        "contact": {
+            "email": "yuanhf@example.com",
+            "phone": "+00 111-2222-3333",
+            "location": "Beijing,China"
+        },
+        "summary": "Ph.D. in Control Science and Engineering",
+        "education": [
+            {
+                "degree": "Ph.D.",
+                "institution": "Education Department of Automation, Tsinghua University",
+                "location": "Beijing,China",
+                "year": "2022-2028 (expected)",
+                "grade": "N/A",
+                "advisor": "Prof. XiaoYuan",
+                "researcharea": "Operations Research and Machine Learning"
+            },
+            {
+                "degree": "B.E.",
+                "institution": "Department of Precision Instrument, Tsinghua University",
+                "location": "Beijing,China",
+                "year": "2018-2022",
+                "grade": "0.00/4.00, Rank: 64/64"
+            }
+        ],
+        "experience": [
+            {
+                "title": "Intern",
+                "company": "ABC Tech Ltd.",
+                "location": "Shanghai,China",
+                "year": "2024.01-2024.06",
+                "domain": "N/A",
+                "responsibilities": [
+                    "Develop engaging content for social media platforms.",
+                    "Prepare reports and presentations summarizing research findings."
+                ]
+            },
+            {
+                "title": "Intern",
+                "company": "XYZ Tech Inc.",
+                "location": "Shanghai,China",
+                "year": "2023.07-2023.12",
+                "domain": "N/A",
+                "responsibilities": [
+                    "Develop engaging content for social media platforms.",
+                    "Prepare reports and presentations summarizing research findings."
+                ]
+            }
+        ],
+        "skills": [
+            "Languages: Chinese, English, French.",
+            "Programming: Python, C++, MATLAB."
+        ],
+        "certifications": []
+    }
+]
