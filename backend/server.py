@@ -1,12 +1,12 @@
 import os
 from flask import Flask, request, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
-from backend.extract_cv_data import extract_text_from_pdf, get_json_resume
+from extract_cv_data import extract_text_from_pdf, get_json_resume
 import json
 
 from langchain.chat_models import init_chat_model
-from backend.extract_cv_data import get_api_key
-from backend.schema import autofill_schema
+from extract_cv_data import get_api_key
+from schema import autofill_schema
 
 # Initialize Flask app
 app = Flask(__name__)
