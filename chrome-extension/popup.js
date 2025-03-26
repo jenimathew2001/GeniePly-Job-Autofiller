@@ -123,12 +123,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 method: "POST",
                 body: formData
             });
+
+            const result = await response.json();
+            if (result.cv_url) {
+                document.getElementById("cv-download-link").href = result.cv_url;
+                document.getElementById("cv-download-link").innerText = "Download Uploaded CV";
+            }
             console.log('response',response)
 
-            const responseText = await response.text();
-            console.log('responseText',responseText)
+            // const responseText = await response.text();
+            // console.log('responseText',responseText)
             try {
-                const data = JSON.parse(responseText);
+                // const data = JSON.parse(responseText);
+                const data = await response.json();
                 console.log('data',data)
                 if (!response.ok) throw new Error(data.error || "Unknown error");
 
@@ -136,19 +143,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("profile-section").classList.remove("hidden");
 
                 // Fill profile fields
-                console.log('data.contact?.email',data.contact?.email,'enteredEmail',enteredEmail)
+                // console.log('data.contact?.email',data.contact?.email,'enteredEmail',enteredEmail)
                 console.log(document.getElementById("email")); 
 
-                document.getElementById("name").value = data.name || "";
-                document.getElementById("profile-email").value = data.contact?.email || enteredEmail ;
-                document.getElementById("phone").value = data.contact?.phone || "N/A";
-                document.getElementById("location").value = data.contact?.location || "";
+                
+                document.getElementById("name").value = data.cv_data.name || "";
+                document.getElementById("profile-email").value = data.cv_data.contact?.email || enteredEmail;
+                document.getElementById("phone").value = data.cv_data.contact?.phone || "N/A";
+                document.getElementById("location").value = data.cv_data.contact?.location || "N/A";
+
+                document.getElementById("cv-download-link").href = data.cv_data.cv_url;
+                document.getElementById("cv-download-link").innerText = "Download Uploaded CV";
+
+
 
                 // Populate Education
                 const eduList = document.getElementById("education-list");
                 eduList.innerHTML = ""; // Clear duplicates
-                if (data.education && data.education.length > 0) {
-                    data.education.forEach(edu => {
+                if (data.cv_data.education && data.cv_data.education.length > 0) {
+                    data.cv_data.education.forEach(edu => {
                         const div = document.createElement("div");
                         div.classList.add("education-item");
                         div.innerHTML = `
@@ -176,8 +189,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Populate Experience
                 const expList = document.getElementById("experience-list");
                 expList.innerHTML = ""; // Clear duplicates
-                if (data.experience && data.experience.length > 0) {
-                    data.experience.forEach(exp => {
+                if (data.cv_data.experience && data.cv_data.experience.length > 0) {
+                    data.cv_data.experience.forEach(exp => {
                         const div = document.createElement("div");
                         div.classList.add("experience-item");
                         div.innerHTML = `
@@ -221,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     
         try {
-            const response = await fetch(`https://genieply.onrender.com/users/${enteredEmail}.json`);
+            const response = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
             if (!response.ok) {
                 throw new Error("Profile not found.");
             }
@@ -230,12 +243,12 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
 
             // Check if the profile contains more than just login credentials
-            if (data.length < 2 || !data[1].name) {
+            if (!data || !data.name) {
                 alert("Please upload a CV or manually fill in your profile.");
                 return;
             }
 
-            const profileData = data[1]; // Accessing the second object
+            const profileData = data; // Accessing the second object
     
             // Display Profile Section
             document.getElementById("profile-section").classList.remove("hidden");
@@ -349,7 +362,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log("✅ Filtered Form Fields:", extractedFields);
     
                     // Fetch user profile data
-                    const profileResponse = await fetch(`https://genieply.onrender.com/users/${sessionStorage.getItem("enteredEmail")}.json`);
+                    //const profileResponse = await fetch(`https://genieply.onrender.com/users/${sessionStorage.getItem("enteredEmail")}.json`);
+                    const profileResponse = await fetch(`https://genieply.onrender.com/users/${sessionStorage.getItem("enteredEmail")}`);
+
                     const profileData = await profileResponse.json();
     
                     // Step 1: Directly match form fields from the user profile
