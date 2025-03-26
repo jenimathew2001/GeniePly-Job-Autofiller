@@ -1,0 +1,66 @@
+{
+    "name": "Jane Doe",
+    "contact": {
+        "email": "jane.doe@gmail.com",
+        "phone": "+1 (123) 456 7898",
+        "location": "N/A"
+    },
+    "summary": "N/A",
+    "education": [
+        {
+            "degree": "High-school",
+            "institution": "N/A",
+            "location": "N/A",
+            "year": "N/A",
+            "grade": "N/A"
+        }
+    ],
+    "experience": [
+        {
+            "title": "Summer 2021 (Rejected from XYZ)",
+            "company": "XYZ",
+            "location": "N/A",
+            "year": "2021",
+            "domain": "N/A",
+            "responsibilities": [
+                "Rejected from XYZ"
+            ]
+        },
+        {
+            "title": "Spring 2021 (University research scholarship, rejected)",
+            "company": "N/A",
+            "location": "N/A",
+            "year": "2021",
+            "domain": "N/A",
+            "responsibilities": [
+                "Don’t make a last-minute sloppy application"
+            ]
+        },
+        {
+            "title": "DEF",
+            "company": "DEF",
+            "location": "N/A",
+            "year": "N/A",
+            "domain": "N/A",
+            "responsibilities": [
+                "Rejected"
+            ]
+        },
+        {
+            "title": "Lorum Ipsum (rejected)",
+            "company": "Lorum Ipsum",
+            "location": "N/A",
+            "year": "N/A",
+            "domain": "N/A",
+            "responsibilities": [
+                "Twitter DMs work better than cold emails"
+            ]
+        }
+    ],
+    "skills": [
+        "French",
+        "German",
+        "Software"
+    ],
+    "certifications": []
+}

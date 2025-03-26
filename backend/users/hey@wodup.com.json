@@ -1,0 +1,9 @@
+[
+    {
+        "username": "hey@wodup.com",
+        "password": "hey"
+    },
+    {
+        "error": "Failed to initialize LLM"
+    }
+]

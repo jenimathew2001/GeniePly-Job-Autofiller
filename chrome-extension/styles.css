@@ -1,0 +1,281 @@
+/* General Page Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    width: 400px;
+    background: linear-gradient(135deg, #eaf2ff, #c3d8ff);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Main container */
+.container {
+    padding: 20px;
+    border-radius: 15px;
+    background: white;
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out;
+    max-width: 350px;
+    margin: auto;
+}
+
+.container:hover {
+    transform: scale(1.02);
+}
+
+/* Logo animation */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.logo {
+    width: 50px;
+    height: 50px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.logo:hover {
+    transform: scale(1.1);
+}
+
+/* ========= LOGIN & SIGN-IN PAGES ========== */
+#login-section, #new-password-section, #password-section {
+    background: #f8faff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.2);
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+}
+
+#login-section:hover, #new-password-section:hover, #password-section:hover {
+    transform: scale(1.03);
+}
+
+/* Headings */
+h2 {
+    font-size: 20px;
+    color: #007BFF;
+    font-weight: 600;
+}
+
+/* Input Fields */
+input {
+    width: 90%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 2px solid #007BFF;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    background: #f9f9ff;
+    color: #333;
+    transition: 0.2s ease-in-out;
+}
+
+input:focus {
+    border-color: #0056b3;
+    outline: none;
+    background: #eaf2ff;
+}
+
+/* Labels */
+label {
+    font-weight: 500;
+    font-size: 14px;
+    display: block;
+    margin-top: 10px;
+    color: #555;
+}
+
+/* Buttons */
+button {
+    background: #007BFF;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    transition: 0.3s ease-in-out;
+    width: 100%;
+    margin-top: 10px;
+}
+
+button:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Separator */
+hr {
+    border: 0;
+    height: 1px;
+    background: #ddd;
+    margin: 20px 0;
+}
+
+/* ========= UPLOAD BOX STYLING ========== */
+.upload-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 90%;
+    max-width: 300px;
+    padding: 15px;
+    border: 2px dashed #007BFF;
+    background: #EAF2FF;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 20px auto;
+    transition: all 0.3s ease-in-out;
+}
+
+.upload-box:hover {
+    background: #d4e4ff;
+    transform: scale(1.05);
+    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+#cv-upload {
+    display: none;
+}
+
+.view-btn {
+    position: absolute;       /* Positioned inside the card */
+    top: 15px;                /* Top-right corner */
+    right: 15px;
+    width: 40px;              /* Smaller, sleek size */
+    height: 40px;
+    background: linear-gradient(135deg, #4A90E2, #007BFF);
+    color: #fff;
+    border: none;
+    border-radius: 50%;       /* Circular design */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px #4A90E2(0, 123, 255, 0.4);
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease-in-out;
+}
+
+.view-btn:hover {
+    background: #005ecb;
+    box-shadow: 0 6px 15px #4A90E2(0, 94, 203, 0.6); 
+    transform: scale(1.1);
+}
+
+.view-btn::after {
+    content: "View Profile";
+    position: absolute;
+    background: #000;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    top: 50px;                /* Tooltip position */
+    right: -10px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+}
+
+.view-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+.autofill-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 15px;
+    border: 2px dashed #007BFF;
+    background: #EAF2FF;
+    color: #007BFF;
+    font-weight: 600;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 10px auto; /* Centered under upload */
+    transition: all 0.3s ease-in-out;
+}
+
+.autofill-btn:hover {
+    background: #d4e4ff;
+    transform: scale(1.05);
+    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.3);
+}
+/* ========= LOADING SPINNER ========== */
+#loading {
+    display: none;
+    text-align: center;
+}
+
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.2);
+    border-top: 4px solid #007BFF;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 10px auto;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ========= PROFILE SECTION ========== */
+#profile-section {
+    background: #f8faff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 123, 255, 0.2);
+    text-align: left;
+}
+
+#profile-section h2 {
+    text-align: center;
+    color: #007BFF;
+    font-weight: 600;
+}
+
+/* Uniform Input Fields */
+.profile-container input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    background: #f9f9f9;
+    color: #333;
+    box-sizing: border-box;
+}
+
+/* Education & Experience Section */
+.education-item, .experience-item {
+    text-align: left;
+    background: #f8faff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* Hide Sections Initially */
+.hidden {
+    display: none;
+}

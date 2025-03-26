@@ -1,0 +1,57 @@
+[
+    {
+        "username": "satoru@yawhoo.com",
+        "password": "s"
+    },
+    {
+        "name": "Satoru Gojo",
+        "contact": {
+            "email": "sgojo@jjk.edu.jp",
+            "phone": "@sgojo",
+            "location": "Tokyo, Japan"
+        },
+        "summary": "Current Position at Tokyo Prefectural Jujutsu High School",
+        "education": [
+            {
+                "degree": "Special Grade Jujutsu Sorcerer",
+                "institution": "Tokyo Prefectural Jujutsu High School",
+                "location": "Tokyo, Japan",
+                "year": "Jul. 2006-2010"
+            }
+        ],
+        "experience": [
+            {
+                "title": "Faculty",
+                "company": "Tokyo Prefectural Jujutsu High School",
+                "location": "Tokyo, Japan",
+                "year": "Jul. 2010-Present",
+                "domain": "Faculty",
+                "responsibilities": [
+                    "The complete incapacitation of the target is caused by a phenomenon where the target will be able to see and feel everything while not being able to see or feel anything at the same time."
+                ]
+            },
+            {
+                "title": "Main Challenger",
+                "company": "Fight against Ryomen Sukuna",
+                "location": "Tokyo, Japan",
+                "year": "Jun. 2023-Present",
+                "domain": "Project",
+                "responsibilities": [
+                    "The complete incapacitation of the target is caused by a phenomenon where the target will be able to see and feel everything while not being able to see or feel anything at the same time."
+                ]
+            },
+            {
+                "title": "Outfit to Yuta Okkotsu",
+                "company": "My Dress-Up Darling",
+                "location": "Tokyo, Japan",
+                "year": "May 2024-Present",
+                "domain": "Event",
+                "responsibilities": [
+                    "Okkotsu is barely alive and Rika is able to take him to Ieiri's steam, when he decides to go forward with his prior agreement with Gojo to use Kenjaku's technique and take over Gojo's corpse to fight Sukuna again, saving Yuji and Todo from the latter's Domain Expansion, by initiating Gojo's."
+                ]
+            }
+        ],
+        "skills": [],
+        "certifications": []
+    }
+]

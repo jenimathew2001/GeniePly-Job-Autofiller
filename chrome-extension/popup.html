@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeniePly - Smart Job Application</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="icon.png" class="logo" alt="GeniePly">
+            <h1>GeniePly</h1>
+        </div>
+
+        <!-- Login Section -->
+        <div id="login-section">
+            <h2>Login</h2>
+            <input type="email" id="email" placeholder="Enter Email">
+            <button id="start-button">Start</button>
+        </div>
+
+        <!-- Password Section (Hidden initially) -->
+        <div id="password-section" class="hidden">
+            <h2>Enter Password</h2>
+            <input type="password" id="password" placeholder="Password">
+            <button id="login-button">Login</button>
+        </div>
+
+        <!-- New Password Section (Hidden initially) -->
+        <div id="new-password-section" class="hidden">
+            <h2>New User</h2>
+            <input type="password" id="newpassword" placeholder="Create a Password">
+            <button id="signin-button">Sign In</button>
+        </div>
+
+        <!-- File Upload Section -->
+        <div id="upload-section" class="hidden">
+            <label for="cv-upload" class="upload-box">
+                <span>📄 Upload Your CV</span>
+                <input type="file" id="cv-upload" accept=".pdf">
+            </label>
+            <!-- <button id="view-profile-button" class="view-btn">👤 View Profile</button> -->
+            <!-- <button id="view-profile-button" class="view-btn">👤</button> -->
+            <div class="profile-card">
+                <button id="view-profile-button" class="view-btn">👤</button>
+            </div>
+            <button id="autofill-button" class="autofill-btn">⚡ AutoFill</button>
+
+        
+
+            
+
+            
+        </div>
+        
+
+        <!-- Loading Animation -->
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <p>Extracting Information...</p>
+        </div>
+
+        <!-- Profile Section -->
+        <div id="profile-section" class="hidden">
+            <h2>Your Profile</h2>
+            <label>Name:</label>
+            <input type="text" id="name" disabled>
+
+            <label>Email:</label>
+            <input type="text" id="profile-email" disabled>
+        
+            <label>Phone:</label>
+            <input type="text" id="phone" disabled>
+        
+            <label>Location:</label>
+            <input type="text" id="location" disabled>
+        
+            <h3>Education</h3>
+            <div id="education-list"></div>
+        
+            <h3>Experience</h3>
+            <div id="experience-list"></div>
+        
+            <button id="go-back">Go Back</button>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

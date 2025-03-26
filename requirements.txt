@@ -1,0 +1,4 @@
+flask
+pdfplumber
+langchain
+pip install -U langchain-groq
