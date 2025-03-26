@@ -7,6 +7,8 @@ import json
 from langchain.chat_models import init_chat_model
 from backend.schema import autofill_schema
 
+from supabase import create_client, Client
+
 # Initialize Flask app
 app = Flask(__name__)
 
