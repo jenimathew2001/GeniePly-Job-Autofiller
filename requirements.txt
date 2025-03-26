@@ -1,4 +1,6 @@
 flask
 pdfplumber
 langchain
-pip install -U langchain-groq
+langchain-groq
+gunicorn
+supabase
