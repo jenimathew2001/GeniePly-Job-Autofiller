@@ -4,7 +4,7 @@
   "version": "1.0",
   "description": "Extracts structured data from CVs and autofills job applications.",
   "permissions": ["storage", "activeTab", "scripting", "identity"],
-  "host_permissions": ["http://127.0.0.1:5000/*"],
+  "host_permissions": ["https://genieply.onrender.com/*"],
   "background": {
       "service_worker": "background.js"
   },

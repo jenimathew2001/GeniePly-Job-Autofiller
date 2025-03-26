@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/check-user", {
+            const response = await fetch("https://genieply.onrender.com/check-user", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/create-user", {
+            const response = await fetch("https://genieply.onrender.com/create-user", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log('formData', formData)
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/upload", {
+            const response = await fetch("https://genieply.onrender.com/upload", {
                 method: "POST",
                 body: formData
             });
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     
         try {
-            const response = await fetch(`http://127.0.0.1:5000/users/${enteredEmail}.json`);
+            const response = await fetch(`https://genieply.onrender.com/users/${enteredEmail}.json`);
             if (!response.ok) {
                 throw new Error("Profile not found.");
             }
@@ -349,7 +349,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log("✅ Filtered Form Fields:", extractedFields);
     
                     // Fetch user profile data
-                    const profileResponse = await fetch(`http://127.0.0.1:5000/users/${sessionStorage.getItem("enteredEmail")}.json`);
+                    const profileResponse = await fetch(`https://genieply.onrender.com/users/${sessionStorage.getItem("enteredEmail")}.json`);
                     const profileData = await profileResponse.json();
     
                     // Step 1: Directly match form fields from the user profile
@@ -372,7 +372,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
                     // Step 2: Only call AI if there are unknown fields
                     if (unknownFields.length > 0) {
-                        const aiResponse = await fetch("http://127.0.0.1:5000/ai-autofill", {
+                        const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ form_fields: unknownFields, profile_data: profileData[1] })
