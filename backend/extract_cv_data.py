@@ -115,6 +115,6 @@ def get_json_resume(cv_text, filename):
 
 
 # Example Usage
-cv_text = extract_text_from_pdf("uploads/PART_TIME_F.pdf")
-if cv_text:
-    get_json_resume(cv_text,filename='uploads/new.json')
+# cv_text = extract_text_from_pdf("uploads/PART_TIME_F.pdf")
+# if cv_text:
+#     get_json_resume(cv_text,filename='uploads/new.json')
