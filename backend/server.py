@@ -7,11 +7,20 @@ import json
 from langchain.chat_models import init_chat_model
 from backend.schema import autofill_schema
 
+from supabase import create_client, Client
+
 # Initialize Flask app
 app = Flask(__name__)
 
+# Supabase Configuration
+SUPABASE_URL = "https://rhszylxaumugoiloyxgj.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoc3p5bHhhdW11Z29pbG95eGdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMwMTMwMzAsImV4cCI6MjA1ODU4OTAzMH0.Zf0VHHkvUjfAuuVU3pPzPgodqFsopk-STRyI9uVp40E"  # Replace with your secure key
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
 # Define upload folder
 UPLOAD_FOLDER = "uploads"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure folder exists
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -27,7 +36,7 @@ def upload_cv():
     """Handles file upload and extracts structured data."""
     if "file" not in request.files: 
         return jsonify({"error": "No file part"}), 400
-    print(request.form)
+    # print(request.form)
 
     file = request.files["file"]
     email = request.form.get("email")
@@ -40,57 +49,45 @@ def upload_cv():
         return jsonify({"error": "No selected file"}), 400
 
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)  # Secure filename
-        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        file.save(file_path)  # Save file
+        # filename = secure_filename(file.filename)  # Secure filename
+        # file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        # file.save(file_path)  # Save file
 
-        # Extract text from the PDF
-        print('IN SERVER FILE PATH',file_path)
-        extracted_text = extract_text_from_pdf(file_path)
+        # # Extract text from the PDF
+        # print('IN SERVER FILE PATH',file_path)
+        extracted_text = extract_text_from_pdf(file)
+
         print('IN SERVER pdf text',extracted_text)
         if not extracted_text:
             return jsonify({"error": "Failed to extract text"}), 500
 
         # Process extracted text into structured JSON
-        structured_data = get_json_resume(extracted_text, filename=file_path.replace(".pdf", ".json"))
+        structured_data = get_json_resume(extracted_text)
         print('IN SERVER structured data',structured_data)
 
-        # Save structured data to user's JSON file
-        user_file_path = os.path.join(USERS_FOLDER, f"{email}.json")
-        if os.path.exists(user_file_path):
-            with open(user_file_path, "r", encoding="utf-8") as user_file:
-                existing_data = json.load(user_file)
-        else:
-            return jsonify({"error": "User not found. Please create an account first."}), 404
+        if not structured_data:
+            return jsonify({"error": "Failed to process CV data"}), 400
 
-        # Merge new CV data with existing data
-        # existing_data.append(structured_data)
+        # Store CV data in Supabase
+        try:
+            response = supabase.table("users").upsert(
+                {"email": email, "cv_json": structured_data}
+            ).execute()
 
-        if structured_data:
-            # Ensure the structure follows: [ {credentials}, {cv details} ]
-            if len(existing_data) == 1:
-                # If only credentials exist, add the CV data
-                existing_data.append(structured_data)
-            elif len(existing_data) == 2:
-                # If both entries exist, replace the CV details
-                existing_data[1] = structured_data
+            if response.data:
+                return jsonify({"message": "CV uploaded successfully", "data": structured_data}), 201
             else:
-                return jsonify({"error": "Invalid user data structure. Please contact support."}), 500
-            
-            # Save updated data
-            with open(user_file_path, 'w') as user_file:
-                json.dump(existing_data, user_file, indent=4)
+                return jsonify({"error": "Failed to store data in Supabase"}), 500
 
-            return jsonify(existing_data[1])
-        else:
-            return jsonify({"error": "Failed to extract data from CV. Please try again."}), 400
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
+    return jsonify({"error": "Invalid file format"}), 400
 
-USERS_FOLDER = "users"
 
 @app.route("/check-user", methods=["POST"])
 def check_user():
-    """Check if the entered email exists as a JSON file in the users folder.
+    """Check if the entered email exists in the database.
        If found, return the stored password."""
     
     data = request.get_json()
@@ -100,29 +97,22 @@ def check_user():
         return jsonify({"error": "Email is required"}), 400
 
     try:
-        # Construct the expected filename
-        file_path = os.path.join(USERS_FOLDER, f"{email}.json")
+        # Query Supabase for the user
+        response = supabase.table("users").select("password").eq("email", email).execute()
 
-        # Check if the file exists
-        if os.path.exists(file_path):
-            with open(file_path, "r") as file:
-                user_data = json.load(file)  # Load the JSON data
-                # print(user_data[0])
-                
-                # Ensure 'password' exists in the JSON structure
-                if "password" in user_data[0]:
-                    return jsonify({"password": user_data[0]["password"]}), 200
-                else:
-                    return jsonify({"error": "Password not found in user file"}), 400
+        if response.data:
+            return jsonify({"password": response.data[0]["password"]}), 200
         else:
             return jsonify({"error": "User not found"}), 404
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500  
 
+
 @app.route("/create-user", methods=["POST"])
 def create_user():
-    """Create a new user if the email doesn't exist."""
+    """Create a new user if the email doesn't exist in Supabase."""
+    
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
@@ -131,38 +121,38 @@ def create_user():
         return jsonify({"error": "Email and password are required"}), 400
 
     try:
-        if not os.path.exists(USERS_FOLDER):
-            os.makedirs(USERS_FOLDER)
+        # Check if user already exists
+        existing_user = supabase.table("users").select("*").eq("email", email).execute()
 
-        user_file = os.path.join(USERS_FOLDER, f"{email}.json")
-        if os.path.exists(user_file):
+        if existing_user.data:
             return jsonify({"error": "User already exists"}), 400
-        
-        # Save user data
-        user_data = [{"username": email, "password": password}]
-        with open(user_file, "w") as file:
-            json.dump(user_data, file, indent=4)
 
-        return jsonify({"message": "User created successfully"}), 201
+        # Insert new user into Supabase
+        response = supabase.table("users").insert({"email": email, "password": password}).execute()
+
+        if response.data:
+            return jsonify({"message": "User created successfully"}), 201
+        else:
+            return jsonify({"error": "Failed to create user"}), 500
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": str(e)}), 500
 
-@app.route("/users/<email>.json", methods=["GET"])
+
+@app.route("/users/<email>", methods=["GET"])
 def get_user_profile(email):
+    """Fetch the user profile from Supabase."""
+    
     try:
-        # Construct file path
-        user_file = os.path.join(USERS_FOLDER, f"{email}.json")
+        response = supabase.table("users").select("email, cv_json").eq("email", email).execute()
 
-        # Check if the file exists
-        if not os.path.exists(user_file):
+        if response.data:
+            return jsonify(response.data[0]), 200
+        else:
             return jsonify({"error": "Profile not found"}), 404
 
-        # Serve the JSON file directly
-        return send_from_directory(USERS_FOLDER, f"{email}.json")
-
     except Exception as e:
-        print(f"Error fetching profile for {email}: {str(e)}")
-        return jsonify({"error": "An error occurred while fetching the profile"}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/ai-autofill", methods=["POST"])
