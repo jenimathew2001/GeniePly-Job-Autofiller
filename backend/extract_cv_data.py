@@ -68,7 +68,7 @@ def save_json(data, filename="structured_resume.json"):
     except Exception as e:
         print(f"Error saving JSON: {e}")
 
-def get_json_resume(cv_text, filename):
+def get_json_resume(cv_text):
     """Processes CV text and returns structured JSON output."""
     print("🔑 Fetching API Key...")
     api_key = get_api_key()
