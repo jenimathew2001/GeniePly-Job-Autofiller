@@ -105,9 +105,9 @@ def get_json_resume(cv_text, filename):
         
         print(f"✅ LLM Response Received:\n{structured_output}")
         
-        print(f"💾 Saving JSON Output as {filename}...")
-        save_json(structured_output,filename)
-        print(f"✅ JSON Saved Successfully: {filename}")
+        # print(f"💾 Saving JSON Output as {filename}...")
+        # save_json(structured_output,filename)
+        # print(f"✅ JSON Saved Successfully: {filename}")
         return structured_output
     except Exception as e:
         print(f"Failed to get structured JSON: {e}")
