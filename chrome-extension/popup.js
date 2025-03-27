@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     
         try {
-            const response = await fetch(`https://genieply.onrender.com/users/${enteredEmail}.json`);
+            const response = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
             if (!response.ok) {
                 throw new Error("Profile not found.");
             }
@@ -231,6 +231,9 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
 
             console.log('dataaaaaaaaaaaa',data)
+            console.log('dataaaaaaaaaaaa data.length',data.length)
+            console.log('dataaaaaaaaaaaa data.cv_json',data.cv_json)
+            console.log('dataaaaaaaaaaaa data.cv_json.length',data.cv_json.length)
 
             // Check if the profile contains more than just login credentials
             if (data.length < 2 || !data[1].name) {
