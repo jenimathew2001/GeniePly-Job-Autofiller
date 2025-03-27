@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.log('responseText',responseText)
             try {
                 const data = JSON.parse(responseText);
-                console.log('data',data)
+                console.log('dataaaaaaaaaaaa',data)
                 if (!response.ok) throw new Error(data.error || "Unknown error");
 
                 document.getElementById("loading").style.display = "none";
@@ -228,6 +228,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
             
             const data = await response.json();
+
+            console.log('dataaaaaaaaaaaa',data)
 
             // Check if the profile contains more than just login credentials
             if (data.length < 2 || !data[1].name) {
