@@ -67,7 +67,8 @@ def upload_cv():
             print("EXISTING USERRR", existing_user )
             print("EXISTING USERRR existing_user.data", existing_user.data )
 
-            if existing_user.data:
+            if existing_user.data.cv_json:
+                print('OH WOW CV JSON IS THERRE',existing_user.data.cv_json)
                 # Update existing record
                 response = (
                     supabase.table("users")
