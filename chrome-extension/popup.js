@@ -128,28 +128,28 @@ document.addEventListener("DOMContentLoaded", function () {
             const responseText = await response.text();
             console.log('responseText',responseText)
             try {
-                const data = JSON.parse(responseText);
-                console.log('dataaaaaaaaaaaa',data)
-                console.log('dataaaaaaaaaaaa data.name',data.name)
-                if (!response.ok) throw new Error(data.error || "Unknown error");
+                const responsejson = JSON.parse(responseText);
+                console.log('dataaaaaaaaaaaa',responsejson.data)
+                console.log('dataaaaaaaaaaaa data.name',responsejson.data.name)
+                if (!response.ok) throw new Error(responsejson.data.error || "Unknown error");
 
                 document.getElementById("loading").style.display = "none";
                 document.getElementById("profile-section").classList.remove("hidden");
 
                 // Fill profile fields
-                console.log('data.contact?.email',data.contact?.email,'enteredEmail',enteredEmail)
+                console.log('data.contact?.email',responsejson.data.contact?.email,'enteredEmail',enteredEmail)
                 console.log(document.getElementById("email")); 
 
-                document.getElementById("name").value = data.name || "";
-                document.getElementById("profile-email").value = data.contact?.email || enteredEmail ;
-                document.getElementById("phone").value = data.contact?.phone || "N/A";
-                document.getElementById("location").value = data.contact?.location || "";
+                document.getElementById("name").value = responsejson.data.name || "";
+                document.getElementById("profile-email").value = responsejson.data.contact?.email || enteredEmail ;
+                document.getElementById("phone").value = responsejson.data.contact?.phone || "N/A";
+                document.getElementById("location").value = responsejson.data.contact?.location || "";
 
                 // Populate Education
                 const eduList = document.getElementById("education-list");
                 eduList.innerHTML = ""; // Clear duplicates
-                if (data.education && data.education.length > 0) {
-                    data.education.forEach(edu => {
+                if (responsejson.data.education && responsejson.data.education.length > 0) {
+                    responsejson.data.education.forEach(edu => {
                         const div = document.createElement("div");
                         div.classList.add("education-item");
                         div.innerHTML = `
@@ -177,8 +177,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Populate Experience
                 const expList = document.getElementById("experience-list");
                 expList.innerHTML = ""; // Clear duplicates
-                if (data.experience && data.experience.length > 0) {
-                    data.experience.forEach(exp => {
+                if (responsejson.data.experience && responsejson.data.experience.length > 0) {
+                    responsejson.data.experience.forEach(exp => {
                         const div = document.createElement("div");
                         div.classList.add("experience-item");
                         div.innerHTML = `
