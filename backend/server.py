@@ -64,35 +64,34 @@ def upload_cv():
                 .execute()
             )
 
-            print("EXISTING USER DATA:", existing_user.data)
+            print("🔍 EXISTING USER DATA:", existing_user.data)
 
-            if existing_user.data:  # User exists
-                print("USER EXISTS, UPDATING CV_JSON")
+            if existing_user.data:  # User exists, update the cv_json
+                print("✅ USER EXISTS, UPDATING CV_JSON")
 
-                # Directly update cv_json without trying to clear it first
                 response = (
                     supabase.table("users")
-                    .update({"cv_json": structured_data})
+                    .update({"cv_json": json.dumps(structured_data)})  # Ensure proper JSON formatting
                     .eq("email", email)
                     .execute()
                 )
 
-            else:  # User does not exist, but this should not happen unless registration is broken
-                print("USER DOES NOT EXIST, THIS SHOULD NOT HAPPEN")
+                print("🛠 SUPABASE UPDATE RESPONSE:", response.data)
+
+                if response.data:
+                    return jsonify({"message": "CV uploaded successfully", "data": structured_data}), 200
+                else:
+                    return jsonify({"error": "Failed to update CV data in Supabase"}), 500
+
+            else:
                 return jsonify({"error": "User does not exist"}), 404
 
-            # Debugging logs
-            print("Supabase Response:", response)
-
-            if response.data:
-                return jsonify({"message": "CV uploaded successfully", "data": structured_data}), 201
-            else:
-                return jsonify({"error": "Failed to store data in Supabase"}), 500
-
         except Exception as e:
+            print("🚨 ERROR:", str(e))
             return jsonify({"error": str(e)}), 500
 
     return jsonify({"error": "Invalid file format"}), 400
+
 
 
 @app.route("/check-user", methods=["POST"])
