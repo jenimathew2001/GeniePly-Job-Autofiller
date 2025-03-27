@@ -31,7 +31,6 @@ def allowed_file(filename):
     """Check if file has a valid extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
 @app.route("/upload", methods=["POST"])
 def upload_cv():
     """Handles file upload and updates structured CV data in Supabase."""
@@ -64,37 +63,26 @@ def upload_cv():
                 .eq("email", email)
                 .execute()
             )
-            print("EXISTING USERRR", existing_user )
-            print("EXISTING USERRR existing_user.data", existing_user.data )
-            print("EXISTING USERRR existing_user.data[0]", existing_user.data[0]['cv_json'] )
 
-            if existing_user.data and isinstance(existing_user.data, list):
-                first_user = existing_user.data[0]  # Get the first record
-                cv_json = first_user.get("cv_json", {})  # Safely get cv_json, default to {}
+            print("EXISTING USER DATA:", existing_user.data)
 
-                if cv_json and "name" in cv_json:
-                    print('OH WOW CV JSON IS THERE', cv_json["name"])
-        
-                    # Update existing record
-                    response = (
-                        supabase.table("users")
-                        .update({"cv_json": structured_data})
-                        .eq("email", email)
-                        .execute()
-                     )
-                else:
-                    print('OH NO CV JSON IS NOT THERE', cv_json)
+            if existing_user.data:  # User exists
+                print("USER EXISTS, UPDATING CV_JSON")
 
-                    # Insert new record
-                    response = (
+                # Directly update cv_json without trying to clear it first
+                response = (
                     supabase.table("users")
-                    .insert({"email": email, "cv_json": structured_data})
+                    .update({"cv_json": structured_data})
+                    .eq("email", email)
                     .execute()
-                 )
+                )
 
-                # Debugging logs
-                print("Supabase Response:", response)
+            else:  # User does not exist, but this should not happen unless registration is broken
+                print("USER DOES NOT EXIST, THIS SHOULD NOT HAPPEN")
+                return jsonify({"error": "User does not exist"}), 404
 
+            # Debugging logs
+            print("Supabase Response:", response)
 
             if response.data:
                 return jsonify({"message": "CV uploaded successfully", "data": structured_data}), 201
