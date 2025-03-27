@@ -71,7 +71,7 @@ def upload_cv():
 
                 response = (
                     supabase.table("users")
-                    .update({"cv_json": json.dumps(structured_data)})  # Ensure proper JSON formatting
+                    .update("cv_json":structured_data )  # Ensure proper JSON formatting
                     .eq("email", email)
                     .execute()
                 )
