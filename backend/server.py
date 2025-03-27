@@ -81,6 +81,9 @@ def upload_cv():
                     .execute()
                 )
 
+            # Debugging logs
+            print("Supabase Response:", response)
+
             if response.data:
                 return jsonify({"message": "CV uploaded successfully", "data": structured_data}), 201
             else:
