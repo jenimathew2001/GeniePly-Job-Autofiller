@@ -353,7 +353,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log("✅ Filtered Form Fields:", extractedFields);
     
                     // Fetch user profile data
-                    const profileResponse = await fetch(`https://genieply.onrender.com/users/${sessionStorage.getItem("enteredEmail")}.json`);
+                    const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
                     const profileData = await profileResponse.json();
     
                     // Step 1: Directly match form fields from the user profile
@@ -361,7 +361,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     let unknownFields = [];
     
                     extractedFields.forEach(field => {
-                        let matchedValue = getProfileValue(field, profileData[1]); // Extract value from profile
+                        let matchedValue = getProfileValue(field, profileData.cv_json); // Extract value from profile
                         if (matchedValue) {
                             knownFields.push({ ...field, value: matchedValue });
                         } else {
