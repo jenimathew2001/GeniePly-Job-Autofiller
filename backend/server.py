@@ -65,6 +65,7 @@ def upload_cv():
                 .execute()
             )
             print("EXISTING USERRR", existing_user )
+            print("EXISTING USERRR existing_user.data", existing_user.data )
 
             if existing_user.data:
                 # Update existing record
