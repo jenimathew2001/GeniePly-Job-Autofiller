@@ -68,26 +68,33 @@ def upload_cv():
             print("EXISTING USERRR existing_user.data", existing_user.data )
             print("EXISTING USERRR existing_user.data[0]", existing_user.data[0]['cv_json'] )
 
-            if existing_user.data[0]['cv_json']['name']:
-                print('OH WOW CV JSON IS THERRE', existing_user.data[0]['cv_json']['name'])
-                # Update existing record
-                response = (
-                    supabase.table("users")
-                    .update({"cv_json": structured_data})
-                    .eq("email", email)
-                    .execute()
-                )
-            else:
-                print('OH no CV JSON IS not THERRE', existing_user.data[0]['cv_json'])
-                # Insert new record if user does not exist
-                response = (
+            if existing_user.data and isinstance(existing_user.data, list):
+                first_user = existing_user.data[0]  # Get the first record
+                cv_json = first_user.get("cv_json", {})  # Safely get cv_json, default to {}
+
+                if cv_json and "name" in cv_json:
+                    print('OH WOW CV JSON IS THERE', cv_json["name"])
+        
+                    # Update existing record
+                    response = (
+                        supabase.table("users")
+                        .update({"cv_json": structured_data})
+                        .eq("email", email)
+                        .execute()
+                     )
+                else:
+                    print('OH NO CV JSON IS NOT THERE', cv_json)
+
+                    # Insert new record
+                    response = (
                     supabase.table("users")
                     .insert({"email": email, "cv_json": structured_data})
                     .execute()
-                )
+                 )
 
-            # Debugging logs
-            print("Supabase Response:", response)
+                # Debugging logs
+                print("Supabase Response:", response)
+
 
             if response.data:
                 return jsonify({"message": "CV uploaded successfully", "data": structured_data}), 201
