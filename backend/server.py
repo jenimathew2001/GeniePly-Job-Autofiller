@@ -76,7 +76,7 @@ def upload_cv():
                     .execute()
                 )
 
-                print("🛠 SUPABASE UPDATE RESPONSE:", response.data)
+                print("🛠 SUPABASE UPDATE RESPONSE:", response)
 
                 if response.data:
                     return jsonify({"message": "CV uploaded successfully", "data": structured_data}), 200
