@@ -130,6 +130,7 @@ document.addEventListener("DOMContentLoaded", function () {
             try {
                 const data = JSON.parse(responseText);
                 console.log('dataaaaaaaaaaaa',data)
+                console.log('dataaaaaaaaaaaa data.name',data.name)
                 if (!response.ok) throw new Error(data.error || "Unknown error");
 
                 document.getElementById("loading").style.display = "none";
