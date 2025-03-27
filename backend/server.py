@@ -69,7 +69,7 @@ def upload_cv():
             print("EXISTING USERRR existing_user.data[0]", existing_user.data[0]['cv_json'] )
 
             if existing_user.data[0]['cv_json']['name']:
-                print('OH WOW CV JSON IS THERRE',existing_user.data.cv_json)
+                print('OH WOW CV JSON IS THERRE', existing_user.data[0]['cv_json']['name'])
                 # Update existing record
                 response = (
                     supabase.table("users")
@@ -78,6 +78,7 @@ def upload_cv():
                     .execute()
                 )
             else:
+                print('OH no CV JSON IS not THERRE', existing_user.data[0]['cv_json'])
                 # Insert new record if user does not exist
                 response = (
                     supabase.table("users")
