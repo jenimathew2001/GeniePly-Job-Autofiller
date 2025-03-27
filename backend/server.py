@@ -66,6 +66,7 @@ def upload_cv():
             )
             print("EXISTING USERRR", existing_user )
             print("EXISTING USERRR existing_user.data", existing_user.data )
+            print("EXISTING USERRR existing_user.data[0]", existing_user.data[0] )
 
             if existing_user.data.cv_json:
                 print('OH WOW CV JSON IS THERRE',existing_user.data.cv_json)
