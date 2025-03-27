@@ -144,7 +144,12 @@ def get_user_profile(email):
     """Fetch the user profile from Supabase."""
     
     try:
+        print(f"🔍 Checking for user: {email}")  # Debugging
+
         response = supabase.table("users").select("email, cv_json").eq("email", email).execute()
+
+        print(f"🛠 Supabase Response: {response.data}")  # Debugging
+
 
         if response.data:
             return jsonify(response.data[0]), 200
