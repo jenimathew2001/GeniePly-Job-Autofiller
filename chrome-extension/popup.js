@@ -230,18 +230,13 @@ document.addEventListener("DOMContentLoaded", function () {
             
             const data = await response.json();
 
-            console.log('dataaaaaaaaaaaa',data)
-            console.log('dataaaaaaaaaaaa data.length',data.length)
-            console.log('dataaaaaaaaaaaa data.cv_json',data.cv_json)
-            console.log('dataaaaaaaaaaaa data.cv_json.length',data.cv_json.length)
-
             // Check if the profile contains more than just login credentials
-            if (data.length < 2 || !data[1].name) {
+            if (!data.cv_json || Object.keys(data.cv_json).length === 0) {
                 alert("Please upload a CV or manually fill in your profile.");
                 return;
             }
 
-            const profileData = data[1]; // Accessing the second object
+            const profileData = data.cv_json; // Accessing the second object
     
             // Display Profile Section
             document.getElementById("profile-section").classList.remove("hidden");

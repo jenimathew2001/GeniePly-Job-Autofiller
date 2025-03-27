@@ -31,12 +31,12 @@ def allowed_file(filename):
     """Check if file has a valid extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 @app.route("/upload", methods=["POST"])
 def upload_cv():
-    """Handles file upload and extracts structured data."""
-    if "file" not in request.files: 
+    """Handles file upload and updates structured CV data in Supabase."""
+    if "file" not in request.files:
         return jsonify({"error": "No file part"}), 400
-    # print(request.form)
 
     file = request.files["file"]
     email = request.form.get("email")
@@ -44,35 +44,42 @@ def upload_cv():
     if not email:
         return jsonify({"error": "User email not provided"}), 400
 
-
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
     if file and allowed_file(file.filename):
-        # filename = secure_filename(file.filename)  # Secure filename
-        # file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        # file.save(file_path)  # Save file
-
-        # # Extract text from the PDF
-        # print('IN SERVER FILE PATH',file_path)
         extracted_text = extract_text_from_pdf(file)
-
-        print('IN SERVER pdf text',extracted_text)
         if not extracted_text:
             return jsonify({"error": "Failed to extract text"}), 500
 
-        # Process extracted text into structured JSON
         structured_data = get_json_resume(extracted_text)
-        print('IN SERVER structured data',structured_data)
-
         if not structured_data:
             return jsonify({"error": "Failed to process CV data"}), 400
 
-        # Store CV data in Supabase
         try:
-            response = supabase.table("users").upsert(
-                {"email": email, "cv_json": structured_data}
-            ).execute()
+            # Check if user exists
+            existing_user = (
+                supabase.table("users")
+                .select("cv_json")
+                .eq("email", email)
+                .execute()
+            )
+
+            if existing_user.data:
+                # Update existing record
+                response = (
+                    supabase.table("users")
+                    .update({"cv_json": structured_data})
+                    .eq("email", email)
+                    .execute()
+                )
+            else:
+                # Insert new record if user does not exist
+                response = (
+                    supabase.table("users")
+                    .insert({"email": email, "cv_json": structured_data})
+                    .execute()
+                )
 
             if response.data:
                 return jsonify({"message": "CV uploaded successfully", "data": structured_data}), 201
