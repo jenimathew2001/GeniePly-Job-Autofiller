@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
             
             const data = await response.json();
-
+            console.log('!!!!!view button data',data)
             // Check if the profile contains more than just login credentials
             if (!data.cv_json || Object.keys(data.cv_json).length === 0) {
                 alert("Please upload a CV or manually fill in your profile.");
