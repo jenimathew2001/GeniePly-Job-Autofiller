@@ -237,8 +237,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             const profileData = data.cv_json; // Accessing the second object
-            console.log('!!!!!view button data data.cv_json',data.cv_json)
-            console.log('!!!!!view button data data[cv_json]',data['cv_json'])
+            console.log('!!!!!view button data data.cv_json',data.cv_json.name)
+            console.log('!!!!!view button data data[cv_json]',data['cv_json'].name)
 
     
             // Display Profile Section
