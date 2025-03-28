@@ -316,6 +316,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("autofill-button").addEventListener("click", function () {
         console.log("🔹 Autofill button clicked!");
+
+        
     
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             if (!tabs[0]) {
@@ -356,6 +358,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
                     const profileData = await profileResponse.json();
 
+                    // Check if the profile contains more than just login credentials
+                    if (!profileData.cv_json || Object.keys(profileData.cv_json).length === 0) {
+                        alert("Please upload a CV or manually fill in your profile.");
+                        return;
+                    }
+
                     console.log("✅ Profile:", profileData);
     
                     // Step 1: Directly match form fields from the user profile
@@ -381,7 +389,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ form_fields: unknownFields, profile_data: profileData[1] })
+                            body: JSON.stringify({ form_fields: unknownFields, profile_data: profileData })
                         });
     
                         aiFilledData = await aiResponse.json();
