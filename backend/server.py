@@ -173,6 +173,9 @@ def get_user_profile(email):
 def ai_autofill():
     """Matches form fields with user profile using Llama3 AI"""
     data = request.json
+
+    print('API data received',data)
+    
     form_fields = data.get("form_fields", [])
     profile_data = data.get("profile_data", {})
 
