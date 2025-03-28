@@ -355,6 +355,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Fetch user profile data
                     const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
                     const profileData = await profileResponse.json();
+
+                    console.log("✅ Profile:", profileData);
     
                     // Step 1: Directly match form fields from the user profile
                     let knownFields = [];
