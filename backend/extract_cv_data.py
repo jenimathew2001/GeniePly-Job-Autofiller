@@ -68,7 +68,7 @@ def save_json(data, filename="structured_resume.json"):
     except Exception as e:
         print(f"Error saving JSON: {e}")
 
-def get_json_resume(cv_text):
+def get_json_resume(cv_textsa):
     """Processes CV text and returns structured JSON output."""
     print("🔑 Fetching API Key...")
     api_key = get_api_key()
@@ -81,7 +81,7 @@ def get_json_resume(cv_text):
 
     print("🤖 Initializing LLM Model...")
     try : 
-        llm = init_chat_model("llama3-8b-8192", model_provider="groq")
+        llm = init_chat_model("llama3-70b-32k", model_provider="groq")
         print(f"✅ LLM Model Initialized: {llm}")
 
         print("📐 Setting Up Structured LLM Output...")
