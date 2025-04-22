@@ -81,7 +81,7 @@ def get_json_resume(cv_text):
 
     print("🤖 Initializing LLM Model...")
     try : 
-        llm = init_chat_model("llama3-8b-32k", model_provider="groq")
+        llm = init_chat_model("mixtral-8x7b-32768", model_provider="groq")
         print(f"✅ LLM Model Initialized: {llm}")
 
         print("📐 Setting Up Structured LLM Output...")
