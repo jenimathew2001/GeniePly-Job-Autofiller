@@ -3,8 +3,9 @@ import json
 import os
 from langchain.chat_models import init_chat_model
 from backend.schema import json_schema
-
+# from schema import json_schema
 def get_api_key(file_path="backend/groq_api_key.txt"):
+# def get_api_key(file_path="groq_api_key.txt"):
     """Reads and validates API key from a file."""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
@@ -81,7 +82,7 @@ def get_json_resume(cv_text):
 
     print("🤖 Initializing LLM Model...")
     try : 
-        llm = init_chat_model("mixtral-8x7b-32768", model_provider="groq")
+        llm = init_chat_model("llama3-8b-8192", model_provider="groq")
         print(f"✅ LLM Model Initialized: {llm}")
 
         print("📐 Setting Up Structured LLM Output...")
@@ -115,6 +116,6 @@ def get_json_resume(cv_text):
 
 
 # Example Usage
-# cv_text = extract_text_from_pdf("uploads/PART_TIME_F.pdf")
+# cv_text = extract_text_from_pdf("uploads/arun.pdf")
 # if cv_text:
-#     get_json_resume(cv_text,filename='uploads/new.json')
+#     get_json_resume(cv_text)
