@@ -218,14 +218,26 @@ Return only a JSON array like this (NO explanations):
 ]
         """
 
-        response = llm.invoke(prompt)
-        if isinstance(response, str):
-            try:
-                response = json.loads(response)
-            except Exception as e:
-                return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
+        # response = llm.invoke(prompt)
 
-        return jsonify(response)
+        ai_message = llm.invoke(prompt)
+        text_output = ai_message.content if hasattr(ai_message, 'content') else ai_message
+
+        try:
+            response_json = json.loads(text_output)
+        except Exception as e:
+            print("❌ Failed to parse AI response:", text_output)
+            return jsonify({"error": "Failed to parse LLM output", "details": str(e)}), 500
+
+
+
+        # if isinstance(response, str):
+        #     try:
+        #         response = json.loads(response)
+        #     except Exception as e:
+        #         return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
+
+        return jsonify(response_json)
 
     except Exception as e:
         print(f"❌ AI Processing Failed: {e}")
