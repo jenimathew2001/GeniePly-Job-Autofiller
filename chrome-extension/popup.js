@@ -381,20 +381,21 @@ document.addEventListener("DOMContentLoaded", function () {
     
                     console.log("✅ Directly Matched Fields from Profile:", knownFields);
                     console.log("❓ Unknown Fields (to send to AI):", unknownFields);
-    
-                    let aiFilledData = { form_fields_filled: [] };
-    
-                    // Step 2: Only call AI if there are unknown fields
+
+
+                    let aiFilledData = [];
+
                     if (unknownFields.length > 0) {
                         const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ form_fields: unknownFields, profile_data: profileData })
+                            body: JSON.stringify({ form_fields: extractedFields, profile_data: profileData.cv_json })
                         });
-    
+
                         aiFilledData = await aiResponse.json();
-                        console.log("🤖 AI Response:", aiFilledData);
+                        console.log("🤖 AI Agent Response:", aiFilledData);
                     }
+
 
                     // ✅ Ensure AI Response contains valid data
                     if (!aiFilledData || !Array.isArray(aiFilledData.form_fields_filled)) {
@@ -409,8 +410,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     chrome.scripting.executeScript(
                         {
                             target: { tabId: tabs[0].id },
-                            function: autofillForm,
-                            args: [finalFilledFields]
+                            function: executeAgentPlan,
+                            args: [aiFilledData]
                         },
                         () => console.log("✅ Form Autofilled")
                     );
@@ -422,6 +423,51 @@ document.addEventListener("DOMContentLoaded", function () {
     /**
      * Extracts matching data from the user profile based on field name or label.
      */
+
+    function executeAgentPlan(planSteps) {
+        console.log("🤖 Executing AI Agent Plan...");
+    
+        planSteps.forEach(step => {
+            try {
+                const { action, selector, value } = step;
+                const element = document.querySelector(selector);
+    
+                if (!element) {
+                    console.warn(`⚠️ Element not found for selector: ${selector}`);
+                    return;
+                }
+    
+                if (action === "click") {
+                    element.click();
+                    console.log(`🖱 Clicked: ${selector}`);
+                } else if (action === "type") {
+                    element.focus();
+                    element.value = value;
+                    element.dispatchEvent(new Event("input", { bubbles: true }));
+                    element.dispatchEvent(new Event("change", { bubbles: true }));
+                    console.log(`⌨️ Typed '${value}' into: ${selector}`);
+                } else if (action === "select") {
+                    const option = Array.from(element.options).find(opt =>
+                        opt.text.toLowerCase().includes(value.toLowerCase()) || opt.value.toLowerCase() === value.toLowerCase()
+                    );
+                    if (option) {
+                        element.value = option.value;
+                        element.dispatchEvent(new Event("change", { bubbles: true }));
+                        console.log(`🔽 Selected '${option.value}' in: ${selector}`);
+                    }
+                } else if (action === "check") {
+                    element.checked = true;
+                    element.dispatchEvent(new Event("change", { bubbles: true }));
+                    console.log(`☑️ Checked: ${selector}`);
+                }
+            } catch (e) {
+                console.error("❌ Error executing step:", step, e);
+            }
+        });
+    
+        console.log("✅ AI Agent Execution Complete");
+    }
+    
     
 
     function getProfileValue(field, profile) {

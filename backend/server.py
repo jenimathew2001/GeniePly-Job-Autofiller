@@ -171,11 +171,7 @@ def get_user_profile(email):
 
 @app.route("/ai-autofill", methods=["POST"])
 def ai_autofill():
-    """Matches form fields with user profile using Llama3 AI"""
     data = request.json
-
-    print('API data received',data)
-    
     form_fields = data.get("form_fields", [])
     profile_data = data.get("profile_data", {})
 
@@ -185,50 +181,56 @@ def ai_autofill():
     print("✅ Received Form Fields:", form_fields)
     print("✅ Received Profile Data:", profile_data)
 
-    # Initialize Llama3 Model
-    api_key = get_api_key()
-    if not api_key:
-        return jsonify({"error": "Missing API Key"}), 500
-
-    os.environ["GROQ_API_KEY"] = api_key
-
+    os.environ["GROQ_API_KEY"] = get_api_key()
     try:
         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
-        structured_llm = llm.with_structured_output(autofill_schema)
-        print("✅ LLM Model Initialized Successfully")
+        print("✅ LLM Initialized")
+
+        prompt = f"""
+You are a smart job application AI assistant. Your task is to help a user fill a job application form.
+
+Based on the HTML structure of the form fields and the user's resume/profile data, generate a list of step-by-step actions that need to be performed to fill out the form.
+
+Each step must include:
+- `action`: what to do (`click`, `type`, `select`, `check`)
+- `selector`: a valid CSS selector to target the element
+- `value`: only for `type`/`select` actions (leave empty for `click` or `check`)
+
+Use the most accurate and shortest selector possible. Focus on filling only the most recent experience and education first.
+
+### Form Fields:
+{json.dumps(form_fields, indent=2)}
+
+### Resume Data:
+{json.dumps(profile_data, indent=2)}
+
+Return only a JSON array like this (NO explanations):
+[
+  {{
+    "action": "click",
+    "selector": "button:contains('Add Experience')"
+  }},
+  {{
+    "action": "type",
+    "selector": "input[name='company']",
+    "value": "Polestar"
+  }}
+]
+        """
+
+        response = llm.invoke(prompt)
+        if isinstance(response, str):
+            try:
+                response = json.loads(response)
+            except Exception as e:
+                return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
+
+        return jsonify(response)
 
     except Exception as e:
-        print(f"🚨 ERROR: LLM Initialization Failed: {e}")
-        return jsonify({"error": "LLM Initialization Failed", "details": str(e)}), 500
-
-    # Generate LLM prompt
-    prompt = f"""
-    Match the following form fields with the correct values from the user profile.
-
-    **Form Fields:** {form_fields}
-
-    **User Profile Data:** {profile_data}
-
-    **Output format:** (strictly JSON, no explanations)
-    {autofill_schema}
-    """
-
-    
-
-    # Invoke AI model
-    try:
-        structured_output = structured_llm.invoke(prompt)
-        
-        # Validate JSON response
-        if not isinstance(structured_output, dict):
-            return jsonify({"error": "AI returned invalid JSON"}), 500
-
-        print(f"✅ LLM Response:\n{structured_output}")
-        return jsonify(structured_output)
-
-    except Exception as e:
-        print(f"🚨 ERROR: AI Matching Failed: {e}")
+        print(f"❌ AI Processing Failed: {e}")
         return jsonify({"error": "AI Processing Failed", "details": str(e)}), 500
+
 
 if __name__ == "__main__":
     if not os.path.exists(USERS_FOLDER):
