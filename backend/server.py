@@ -224,7 +224,18 @@ Return only a JSON array like this (NO explanations):
         text_output = ai_message.content if hasattr(ai_message, 'content') else ai_message
 
         try:
-            response_json = json.loads(text_output)
+            import re
+
+            # Extract the JSON array from the response text
+            match = re.search(r'\[\s*{.*}\s*]', text_output, re.DOTALL)
+            if not match:
+                return jsonify({"error": "Failed to locate JSON array in response", "raw": text_output}), 500
+
+            json_text = match.group(0)
+            response_json = json.loads(json_text)
+
+
+            # response_json = json.loads(text_output)
         except Exception as e:
             print("❌ Failed to parse AI response:", text_output)
             return jsonify({"error": "Failed to parse LLM output", "details": str(e)}), 500
