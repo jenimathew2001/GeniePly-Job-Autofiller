@@ -411,7 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         {
                             target: { tabId: tabs[0].id },
                             function: executeAgentPlan,
-                            args: [aiFilledData]
+                            args: [aiFilledData.form_fields_filled]
                         },
                         () => console.log("✅ Form Autofilled")
                     );
