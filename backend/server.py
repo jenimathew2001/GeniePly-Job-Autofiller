@@ -248,7 +248,9 @@ Return only a JSON array like this (NO explanations):
         #     except Exception as e:
         #         return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
 
-        return jsonify(response_json)
+        # return jsonify(response_json)
+        return jsonify({"form_fields_filled": response_json})
+
 
     except Exception as e:
         print(f"❌ AI Processing Failed: {e}")
