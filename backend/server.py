@@ -187,16 +187,20 @@ def ai_autofill():
         print("✅ LLM Initialized")
 
         prompt = f"""
-You are a smart job application AI assistant. Your task is to help a user fill a job application form.
+You are a smart job application AI assistant. Your task is to help a user fill out a job application form using the user's resume/profile data.
 
-Based on the HTML structure of the form fields and the user's resume/profile data, generate a list of step-by-step actions that need to be performed to fill out the form.
+Generate step-by-step actions. Each step must include:
+- `action`: one of `click`, `type`, `select`, or `check`
+- `selector`: a valid CSS selector
+- `value`: only for `type` and `select`
+- Optional: `times`: for how many times to repeat a click action
 
-Each step must include:
-- `action`: what to do (`click`, `type`, `select`, `check`)
-- `selector`: a valid CSS selector to target the element
-- `value`: only for `type`/`select` actions (leave empty for `click` or `check`)
-
-Use the most accurate and shortest selector possible. Focus on filling only the most recent experience and education first.
+🧠 **Rules:**
+- Fill out **all education** and **all experience entries**, even if they seem only slightly relevant.
+- Click “Add” buttons multiple times if needed (`times` attribute).
+- Only fill in fields where accurate data is available from profile.
+- **Do NOT guess** gender, caste, religion, or phone numbers — skip them if missing.
+- Use short, accurate selectors.
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
@@ -204,19 +208,20 @@ Use the most accurate and shortest selector possible. Focus on filling only the 
 ### Resume Data:
 {json.dumps(profile_data, indent=2)}
 
-Return only a JSON array like this (NO explanations):
+Return ONLY a JSON array like:
 [
   {{
     "action": "click",
-    "selector": "button:contains('Add Experience')"
+    "selector": "button.add-education",
+    "times": 3
   }},
   {{
     "action": "type",
-    "selector": "input[name='company']",
-    "value": "Polestar"
+    "selector": "input[name='institution']",
+    "value": "IIT Delhi"
   }}
 ]
-        """
+"""
 
         # response = llm.invoke(prompt)
 

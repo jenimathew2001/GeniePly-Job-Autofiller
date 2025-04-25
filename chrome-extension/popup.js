@@ -438,18 +438,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
     
                 if (action === "click") {
-                    element.click();
-                    console.log(`🖱 Clicked: ${selector}`);
-                } else if (action === "type") {
+                    const repeat = step.times || 1;
+                    for (let i = 0; i < repeat; i++) {
+                        element.click();
+                    } 
+                }
+                else if (action === "type") {
                     element.focus();
                     element.value = value;
                     element.dispatchEvent(new Event("input", { bubbles: true }));
                     element.dispatchEvent(new Event("change", { bubbles: true }));
                     console.log(`⌨️ Typed '${value}' into: ${selector}`);
                 } else if (action === "select") {
-                    const option = Array.from(element.options).find(opt =>
-                        opt.text.toLowerCase().includes(value.toLowerCase()) || opt.value.toLowerCase() === value.toLowerCase()
-                    );
+                    
+                    const option = Array.from(element.options).find(opt => {
+                        const val = value.toLowerCase();
+                        return opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val);
+                    });
+                    
                     if (option) {
                         element.value = option.value;
                         element.dispatchEvent(new Event("change", { bubbles: true }));
