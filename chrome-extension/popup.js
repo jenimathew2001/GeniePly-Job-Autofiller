@@ -314,9 +314,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-
     document.getElementById("autofill-button").addEventListener("click", function () {
         console.log("🔹 Autofill button clicked!");
+
+        
     
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
             if (!tabs[0]) {
@@ -341,7 +342,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
     
                     let extractedFields = injectionResults[0].result;
-                    console.log("📋 Raw Extracted Form Fields:", extractedFields);
     
                     // Filter out unnecessary fields
                     extractedFields = extractedFields.filter(field =>
@@ -354,219 +354,74 @@ document.addEventListener("DOMContentLoaded", function () {
     
                     console.log("✅ Filtered Form Fields:", extractedFields);
     
-                    const enteredEmail = sessionStorage.getItem("enteredEmail");
+                    // Fetch user profile data
                     const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
                     const profileData = await profileResponse.json();
-    
+
+                    // Check if the profile contains more than just login credentials
                     if (!profileData.cv_json || Object.keys(profileData.cv_json).length === 0) {
                         alert("Please upload a CV or manually fill in your profile.");
                         return;
                     }
+
+                    console.log("✅ Profile:", profileData);
     
-                    console.log("✅ Loaded Profile:", profileData);
+                    // Step 1: Directly match form fields from the user profile
+                    let knownFields = [];
+                    let unknownFields = [];
     
-                    // 🧠 Phase 1: Ask AI what to click and fill
-                    const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ form_fields: extractedFields, profile_data: profileData.cv_json })
+                    extractedFields.forEach(field => {
+                        let matchedValue = getProfileValue(field, profileData.cv_json); // Extract value from profile
+                        if (matchedValue) {
+                            knownFields.push({ ...field, value: matchedValue });
+                        } else {
+                            unknownFields.push(field); // Send only unknown fields to AI
+                        }
                     });
     
-                    const aiData = await aiResponse.json();
-                    console.log("🤖 AI Response:", aiData);
+                    console.log("✅ Directly Matched Fields from Profile:", knownFields);
+                    console.log("❓ Unknown Fields (to send to AI):", unknownFields);
     
-                    if (!aiData || !Array.isArray(aiData.form_fields_filled)) {
-                        console.error("❌ AI response invalid or missing:", aiData);
+                    let aiFilledData = { form_fields_filled: [] };
+    
+                    // Step 2: Only call AI if there are unknown fields
+                    if (unknownFields.length > 0) {
+                        const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ form_fields: unknownFields, profile_data: profileData })
+                        });
+    
+                        aiFilledData = await aiResponse.json();
+                        console.log("🤖 AI Response:", aiFilledData);
+                    }
+
+                    // ✅ Ensure AI Response contains valid data
+                    if (!aiFilledData || !Array.isArray(aiFilledData.form_fields_filled)) {
+                        console.error("❌ AI response is invalid or missing `form_fields_filled`:", aiFilledData);
                         return;
                     }
     
-                    const clickSteps = aiData.form_fields_filled.filter(step => step.action === "click");
-                    const fillSteps = aiData.form_fields_filled.filter(step => step.action !== "click");
+                    // Merge both known and AI-filled fields
+                    const finalFilledFields = [...knownFields, ...aiFilledData.form_fields_filled];
     
-                    console.log("🖱 Click Steps (Add buttons):", clickSteps);
-                    console.log("⌨️ Fill Steps (input/select/check):", fillSteps);
-    
-                    // Phase 2: First, Click the Add buttons dynamically
+                    // Autofill form
                     chrome.scripting.executeScript(
                         {
                             target: { tabId: tabs[0].id },
-                            function: executeClickPhase,
-                            args: [clickSteps]
+                            function: autofillForm,
+                            args: [finalFilledFields]
                         },
-                        async () => {
-                            console.log("✅ Finished clicking Add buttons. Waiting for new fields to load...");
-    
-                            // Wait for DOM update
-                            await new Promise(resolve => setTimeout(resolve, 1500));
-    
-                            // Phase 3: Extract updated fields after click
-                            chrome.scripting.executeScript(
-                                {
-                                    target: { tabId: tabs[0].id },
-                                    function: extractFormFieldsDirectly
-                                },
-                                async (newExtraction) => {
-                                    if (!newExtraction || !newExtraction[0]?.result) {
-                                        console.error("❌ Failed to re-extract updated form fields");
-                                        return;
-                                    }
-    
-                                    const updatedFields = newExtraction[0].result;
-                                    console.log("🔄 Updated Form Structure After Clicks:", updatedFields);
-    
-                                    // Phase 4: Now finally Fill Fields
-                                    chrome.scripting.executeScript(
-                                        {
-                                            target: { tabId: tabs[0].id },
-                                            function: executeFillPhase,
-                                            args: [fillSteps]
-                                        },
-                                        () => console.log("✅ Autofilling Completed!")
-                                    );
-                                }
-                            );
-                        }
+                        () => console.log("✅ Form Autofilled")
                     );
                 }
             );
         });
     });
     
-    
-    // 🖱 Phase 1: Perform all Click actions
-    function executeClickPhase(clickSteps) {
-        console.log("🖱 Executing Click Phase...");
-    
-        clickSteps.forEach(step => {
-            const { selector, times } = step;
-            const repeat = times || 1;
-    
-            const elements = document.querySelectorAll(selector);
-    
-            if (!elements.length) {
-                console.warn(`⚠️ No clickable element found for selector: ${selector}`);
-                return;
-            }
-    
-            console.log(`➡️ Found ${elements.length} element(s) for clicking [${selector}]`);
-    
-            for (let i = 0; i < repeat; i++) {
-                elements.forEach(el => {
-                    el.scrollIntoView({ behavior: "smooth", block: "center" });
-                    setTimeout(() => {
-                        el.click();
-                        console.log(`🖱 Clicked ${selector}`);
-                    }, 100 * i);
-                });
-            }
-        });
-    }
-    
-    
-    // ⌨️ Phase 2: Fill all fields (type/select/check)
-    function executeFillPhase(fillSteps) {
-        console.log("⌨️ Executing Fill Phase...");
-    
-        fillSteps.forEach(step => {
-            const { action, selector, value } = step;
-            const element = document.querySelector(selector);
-    
-            if (!element) {
-                console.warn(`⚠️ No element found for selector: ${selector}`);
-                return;
-            }
-    
-            if (action === "type") {
-                element.focus();
-                element.value = value;
-                element.dispatchEvent(new Event("input", { bubbles: true }));
-                element.dispatchEvent(new Event("change", { bubbles: true }));
-                console.log(`⌨️ Typed '${value}' into: ${selector}`);
-            } else if (action === "select") {
-                const option = Array.from(element.options).find(opt =>
-                    opt.text.toLowerCase().includes(value.toLowerCase()) ||
-                    opt.value.toLowerCase().includes(value.toLowerCase())
-                );
-                if (option) {
-                    element.value = option.value;
-                    element.dispatchEvent(new Event("change", { bubbles: true }));
-                    console.log(`🔽 Selected '${option.value}' in: ${selector}`);
-                } else {
-                    console.warn(`⚠️ No matching option found for value '${value}' in: ${selector}`);
-                }
-            } else if (action === "check") {
-                element.checked = true;
-                element.dispatchEvent(new Event("change", { bubbles: true }));
-                console.log(`☑️ Checked: ${selector}`);
-            }
-        });
-    
-        console.log("✅ Autofill phase complete!");
-    }
-    
-    
-    // 🔍 Form Extraction Function
-    function extractFormFieldsDirectly() {
-        console.log("🔍 Extracting form fields...");
-        const inputs = document.querySelectorAll("input, textarea, select, button");
-    
-        let formStructure = [];
-    
-        inputs.forEach(field => {
-            let label = "";
-            let fieldId = field.id || field.name || "";
-    
-            if (fieldId) {
-                const directLabel = document.querySelector(`label[for="${fieldId}"]`);
-                if (directLabel) label = directLabel.innerText.trim();
-            }
-    
-            if (!label) {
-                const wrapperLabel = field.closest("label");
-                if (wrapperLabel) label = wrapperLabel.innerText.trim();
-            }
-    
-            if (!label && field.hasAttribute("aria-label")) {
-                label = field.getAttribute("aria-label").trim();
-            }
-    
-            if (!label && field.hasAttribute("aria-labelledby")) {
-                const labelElement = document.getElementById(field.getAttribute("aria-labelledby"));
-                if (labelElement) label = labelElement.innerText.trim();
-            }
-    
-            if (!label) {
-                const parentDiv = field.closest("div");
-                if (parentDiv) {
-                    const possibleLabel = parentDiv.querySelector("span, strong, b");
-                    if (possibleLabel) label = possibleLabel.innerText.trim();
-                }
-            }
-    
-            if (!label) {
-                if (field.placeholder) label = field.placeholder.trim();
-                else if (field.tagName.toLowerCase() === "button") label = field.innerText.trim();
-            }
-    
-            const fieldType = field.type?.toLowerCase() || field.tagName.toLowerCase();
-    
-            formStructure.push({
-                name: field.name || "",
-                id: field.id || "",
-                label: label,
-                type: field.tagName.toLowerCase(),
-                fieldType: fieldType,
-                classList: Array.from(field.classList).join(" ")
-            });
-        });
-    
-        console.log("📋 Final Extracted Form Structure:", formStructure);
-        return formStructure;
-    }
-    
-
-
-    
+    /**
+     * Extracts matching data from the user profile based on field name or label.
+     */
     
 
     function getProfileValue(field, profile) {
@@ -646,12 +501,75 @@ document.addEventListener("DOMContentLoaded", function () {
         fieldText = fieldText.toLowerCase(); // Convert fieldText to lowercase for case-insensitive matching
         return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
     }
-
     
     
+    // Function to extract form fields with deeper label search and filtering
+    function extractFormFieldsDirectly() {
+        console.log("🔍 Extracting form fields...");
     
+        const inputs = document.querySelectorAll("input, textarea, select");
+        let formStructure = [];
     
+        inputs.forEach(field => {
+            let label = "";
+            let fieldId = field.id || field.name || "";
     
+            // Try to find associated label
+            if (fieldId) {
+                let directLabel = document.querySelector(`label[for="${fieldId}"]`);
+                if (directLabel) {
+                    label = directLabel.innerText.trim();
+                }
+            }
+    
+            // Check for wrapping label
+            let wrapperLabel = field.closest("label");
+            if (wrapperLabel && !label) {
+                label = wrapperLabel.innerText.trim();
+            }
+    
+            // Look for aria-label
+            if (!label && field.hasAttribute("aria-label")) {
+                label = field.getAttribute("aria-label").trim();
+            }
+    
+            // Check aria-labelledby
+            if (!label && field.hasAttribute("aria-labelledby")) {
+                let labelElement = document.getElementById(field.getAttribute("aria-labelledby"));
+                if (labelElement) {
+                    label = labelElement.innerText.trim();
+                }
+            }
+    
+            // If still no label, look for nearest text in a parent div
+            if (!label) {
+                let parentDiv = field.closest("div");
+                if (parentDiv) {
+                    let possibleLabel = parentDiv.querySelector("span, strong, b");
+                    if (possibleLabel) {
+                        label = possibleLabel.innerText.trim();
+                    }
+                }
+            }
+    
+            // Last resort: use placeholder
+            if (!label && field.placeholder) {
+                label = field.placeholder.trim();
+            }
+    
+            formStructure.push({
+                name: field.name || "",
+                id: field.id ,
+                label: label,
+                type: field.tagName.toLowerCase(),
+                fieldType: field.type || "",
+                classList: Array.from(field.classList).join(" ")
+            });
+        });
+    
+        console.log("📌 Extracted Form Structure:", formStructure);
+        return formStructure;
+    }
     
 
     function autofillForm(filledFields) {

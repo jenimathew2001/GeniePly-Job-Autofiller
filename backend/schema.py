@@ -89,43 +89,59 @@ autofill_schema = {
     "properties": {
         "form_fields_filled": {
             "type": "array",
-            "description": "List of form fields and their AI-matched values",
+            "description": "List of form fields and their AI-matched actions and values.",
             "items": {
                 "type": "object",
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "The name attribute of the form field",
+                        "description": "The name attribute of the form field.",
                         "default": "N/A"
                     },
                     "id": {
                         "type": "string",
-                        "description": "The id attribute of the form field (if available)",
+                        "description": "The id attribute of the form field (if available).",
                         "default": "N/A"
                     },
                     "label": {
                         "type": "string",
-                        "description": "The visible label of the field",
+                        "description": "The visible label of the field.",
                         "default": "N/A"
                     },
                     "type": {
                         "type": "string",
-                        "description": "Type of form element (input, select, checkbox, etc.)",
-                        "enum": ["input", "select", "checkbox", "radio", "textarea"],
+                        "description": "Type of HTML element (input, select, checkbox, radio, textarea, button).",
+                        "enum": ["input", "select", "checkbox", "radio", "textarea", "button"],
                         "default": "input"
                     },
                     "fieldType": {
                         "type": "string",
-                        "description": "Specific type of input (text, email, password, etc.)",
+                        "description": "Specific type of input (e.g., text, email, submit, file, etc.).",
                         "default": "text"
+                    },
+                    "classList": {
+                        "type": "string",
+                        "description": "CSS class names associated with the field (space-separated).",
+                        "default": "N/A"
+                    },
+                    "action": {
+                        "type": "string",
+                        "description": "Action to perform on the field: 'click', 'type', 'select', or 'check'.",
+                        "enum": ["click", "type", "select", "check"],
+                        "default": "type"
+                    },
+                    "times": {
+                        "type": "integer",
+                        "description": "Number of times to repeat the action (only for 'click' actions).",
+                        "minimum": 1
                     },
                     "value": {
                         "type": "string",
-                        "description": "The AI-matched value for autofill",
+                        "description": "The value to type or select for the field (only for 'type' and 'select' actions).",
                         "default": "N/A"
                     }
                 },
-                "required": ["name", "id", "type", "value"]
+                "required": ["name", "id", "type", "action"]
             }
         }
     },
