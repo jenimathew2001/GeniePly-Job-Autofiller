@@ -619,7 +619,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 id: field.id || "",
                 label: label,
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
-                fieldType: fieldType // checkbox, radio, text, etc.
+                fieldType: fieldType, // checkbox, radio, text, etc.
+                classList: Array.from(field.classList).join(" "),
+                dataset: field.dataset || {}
             });
         });
     
