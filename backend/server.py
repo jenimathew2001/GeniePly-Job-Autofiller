@@ -171,11 +171,7 @@ def get_user_profile(email):
 
 @app.route("/ai-autofill", methods=["POST"])
 def ai_autofill():
-    """Matches form fields with user profile using Llama3 AI"""
     data = request.json
-
-    print('API data received',data)
-    
     form_fields = data.get("form_fields", [])
     profile_data = data.get("profile_data", {})
 
@@ -185,50 +181,84 @@ def ai_autofill():
     print("✅ Received Form Fields:", form_fields)
     print("✅ Received Profile Data:", profile_data)
 
-    # Initialize Llama3 Model
-    api_key = get_api_key()
-    if not api_key:
-        return jsonify({"error": "Missing API Key"}), 500
-
-    os.environ["GROQ_API_KEY"] = api_key
-
+    os.environ["GROQ_API_KEY"] = get_api_key()
     try:
         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
-        structured_llm = llm.with_structured_output(autofill_schema)
-        print("✅ LLM Model Initialized Successfully")
+        print("✅ LLM Initialized")
 
-    except Exception as e:
-        print(f"🚨 ERROR: LLM Initialization Failed: {e}")
-        return jsonify({"error": "LLM Initialization Failed", "details": str(e)}), 500
-
-    # Generate LLM prompt
-    prompt = f"""
-    Match the following form fields with the correct values from the user profile.
-
-    **Form Fields:** {form_fields}
-
-    **User Profile Data:** {profile_data}
-
-    **Output format:** (strictly JSON, no explanations)
-    {autofill_schema}
-    """
-
-    
-
-    # Invoke AI model
-    try:
-        structured_output = structured_llm.invoke(prompt)
         
-        # Validate JSON response
-        if not isinstance(structured_output, dict):
-            return jsonify({"error": "AI returned invalid JSON"}), 500
+        prompt = f"""
+You are a smart job application AI assistant. Your task is to help a user fill out a job application form using the user's resume/profile data.
 
-        print(f"✅ LLM Response:\n{structured_output}")
-        return jsonify(structured_output)
+Generate step-by-step actions. Each step must include:
+- action: one of click, type, select, or check
+- selector: a valid CSS selector
+- value: only for type and select
+- Optional: times: for how many times to repeat a click action
+
+RULES:
+- If a field like 'Add Education' or 'Add Experience' requires clicking multiple times, 
+  generate only ONE click action with a 'times' field (example: "times": 3).
+- DO NOT create multiple 'click' steps for the same button.
+- After clicking to add fields, typing/selecting can happen.
+
+ONLY RETURN A JSON ARRAY. NO explanations. NO comments.
+
+Example good response:
+[
+  {{ "action": "type", "selector": "input[name='addressLine1']", "value": "123 Main Street" }},
+  {{ "action": "select", "selector": "select[name='country']", "value": "United Kingdom" }},
+  {{ "action": "click", "selector": ".add-education-btn", "times": 2 }},
+  {{ "action": "type", "selector": "input[name='degree']", "value": "Bachelor of Engineering" }}
+]
+
+### Form Fields:
+{json.dumps(form_fields, indent=2)}
+
+### Resume Data:
+{json.dumps(profile_data, indent=2)}
+"""
+
+
+
+        # response = llm.invoke(prompt)
+
+        ai_message = llm.invoke(prompt)
+        text_output = ai_message.content if hasattr(ai_message, 'content') else ai_message
+
+        try:
+            import re
+
+            # Extract the JSON array from the response text
+            match = re.search(r'\[\s*{.*}\s*]', text_output, re.DOTALL)
+            if not match:
+                return jsonify({"error": "Failed to locate JSON array in response", "raw": text_output}), 500
+
+            json_text = match.group(0)
+            response_json = json.loads(json_text)
+
+
+            # response_json = json.loads(text_output)
+        except Exception as e:
+            print("❌ Failed to parse AI response:", text_output)
+            return jsonify({"error": "Failed to parse LLM output", "details": str(e)}), 500
+
+
+
+        # if isinstance(response, str):
+        #     try:
+        #         response = json.loads(response)
+        #     except Exception as e:
+        #         return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
+
+        # return jsonify(response_json)
+        return jsonify({"form_fields_filled": response_json})
+
 
     except Exception as e:
-        print(f"🚨 ERROR: AI Matching Failed: {e}")
+        print(f"❌ AI Processing Failed: {e}")
         return jsonify({"error": "AI Processing Failed", "details": str(e)}), 500
+
 
 if __name__ == "__main__":
     if not os.path.exists(USERS_FOLDER):
