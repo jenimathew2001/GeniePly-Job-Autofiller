@@ -314,6 +314,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+
     document.getElementById("autofill-button").addEventListener("click", function () {
         console.log("🔹 Autofill button clicked!");
     
@@ -340,6 +341,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
     
                     let extractedFields = injectionResults[0].result;
+                    console.log("📋 Raw Extracted Form Fields:", extractedFields);
     
                     // Filter out unnecessary fields
                     extractedFields = extractedFields.filter(field =>
@@ -352,7 +354,6 @@ document.addEventListener("DOMContentLoaded", function () {
     
                     console.log("✅ Filtered Form Fields:", extractedFields);
     
-                    // Fetch user profile data
                     const enteredEmail = sessionStorage.getItem("enteredEmail");
                     const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
                     const profileData = await profileResponse.json();
@@ -362,8 +363,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         return;
                     }
     
-                    console.log("✅ Profile:", profileData);
+                    console.log("✅ Loaded Profile:", profileData);
     
+                    // 🧠 Phase 1: Ask AI what to click and fill
                     const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -371,21 +373,20 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
     
                     const aiData = await aiResponse.json();
+                    console.log("🤖 AI Response:", aiData);
     
                     if (!aiData || !Array.isArray(aiData.form_fields_filled)) {
                         console.error("❌ AI response invalid or missing:", aiData);
                         return;
                     }
     
-                    console.log("✅ AI Agent Plan:", aiData.form_fields_filled);
-    
-                    // Phase 1: Click Only (Add Experience/Education)
                     const clickSteps = aiData.form_fields_filled.filter(step => step.action === "click");
                     const fillSteps = aiData.form_fields_filled.filter(step => step.action !== "click");
     
-                    console.log("🔹 Click Steps:", clickSteps);
-                    console.log("🔹 Fill Steps:", fillSteps);
+                    console.log("🖱 Click Steps (Add buttons):", clickSteps);
+                    console.log("⌨️ Fill Steps (input/select/check):", fillSteps);
     
+                    // Phase 2: First, Click the Add buttons dynamically
                     chrome.scripting.executeScript(
                         {
                             target: { tabId: tabs[0].id },
@@ -393,26 +394,34 @@ document.addEventListener("DOMContentLoaded", function () {
                             args: [clickSteps]
                         },
                         async () => {
-                            console.log("✅ Clicks Done, waiting for fields to render...");
-                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            console.log("✅ Finished clicking Add buttons. Waiting for new fields to load...");
     
+                            // Wait for DOM update
+                            await new Promise(resolve => setTimeout(resolve, 1500));
+    
+                            // Phase 3: Extract updated fields after click
                             chrome.scripting.executeScript(
                                 {
                                     target: { tabId: tabs[0].id },
                                     function: extractFormFieldsDirectly
                                 },
-                                async (reExtractResult) => {
-                                    const updatedFields = reExtractResult[0].result;
+                                async (newExtraction) => {
+                                    if (!newExtraction || !newExtraction[0]?.result) {
+                                        console.error("❌ Failed to re-extract updated form fields");
+                                        return;
+                                    }
     
-                                    console.log("🔄 Updated Form Structure:", updatedFields);
+                                    const updatedFields = newExtraction[0].result;
+                                    console.log("🔄 Updated Form Structure After Clicks:", updatedFields);
     
+                                    // Phase 4: Now finally Fill Fields
                                     chrome.scripting.executeScript(
                                         {
                                             target: { tabId: tabs[0].id },
                                             function: executeFillPhase,
                                             args: [fillSteps]
                                         },
-                                        () => console.log("✅ Form Autofilled Completely!")
+                                        () => console.log("✅ Autofilling Completed!")
                                     );
                                 }
                             );
@@ -423,38 +432,47 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
     
-    // ⚡ Phase 1: Clicks (Add Buttons)
+    
+    // 🖱 Phase 1: Perform all Click actions
     function executeClickPhase(clickSteps) {
         console.log("🖱 Executing Click Phase...");
+    
         clickSteps.forEach(step => {
             const { selector, times } = step;
             const repeat = times || 1;
-            const element = document.querySelector(selector);
     
-            if (!element) {
-                console.warn(`⚠️ Click Element not found: ${selector}`);
+            const elements = document.querySelectorAll(selector);
+    
+            if (!elements.length) {
+                console.warn(`⚠️ No clickable element found for selector: ${selector}`);
                 return;
             }
     
+            console.log(`➡️ Found ${elements.length} element(s) for clicking [${selector}]`);
+    
             for (let i = 0; i < repeat; i++) {
-                element.scrollIntoView({ behavior: "smooth", block: "center" });
-                setTimeout(() => {
-                    element.click();
-                    console.log(`🖱 Clicked ${selector}`);
-                }, 100 * i);
+                elements.forEach(el => {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    setTimeout(() => {
+                        el.click();
+                        console.log(`🖱 Clicked ${selector}`);
+                    }, 100 * i);
+                });
             }
         });
     }
     
-    // ⚡ Phase 2: Typing/Selecting/Checking
+    
+    // ⌨️ Phase 2: Fill all fields (type/select/check)
     function executeFillPhase(fillSteps) {
         console.log("⌨️ Executing Fill Phase...");
+    
         fillSteps.forEach(step => {
             const { action, selector, value } = step;
             const element = document.querySelector(selector);
     
             if (!element) {
-                console.warn(`⚠️ Fill Element not found: ${selector}`);
+                console.warn(`⚠️ No element found for selector: ${selector}`);
                 return;
             }
     
@@ -473,6 +491,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     element.value = option.value;
                     element.dispatchEvent(new Event("change", { bubbles: true }));
                     console.log(`🔽 Selected '${option.value}' in: ${selector}`);
+                } else {
+                    console.warn(`⚠️ No matching option found for value '${value}' in: ${selector}`);
                 }
             } else if (action === "check") {
                 element.checked = true;
@@ -480,12 +500,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 console.log(`☑️ Checked: ${selector}`);
             }
         });
+    
+        console.log("✅ Autofill phase complete!");
     }
     
-    // Extract Form Fields Deeply
+    
+    // 🔍 Form Extraction Function
     function extractFormFieldsDirectly() {
         console.log("🔍 Extracting form fields...");
         const inputs = document.querySelectorAll("input, textarea, select, button");
+    
         let formStructure = [];
     
         inputs.forEach(field => {
@@ -493,17 +517,13 @@ document.addEventListener("DOMContentLoaded", function () {
             let fieldId = field.id || field.name || "";
     
             if (fieldId) {
-                let directLabel = document.querySelector(`label[for="${fieldId}"]`);
-                if (directLabel) {
-                    label = directLabel.innerText.trim();
-                }
+                const directLabel = document.querySelector(`label[for="${fieldId}"]`);
+                if (directLabel) label = directLabel.innerText.trim();
             }
     
             if (!label) {
-                let wrapperLabel = field.closest("label");
-                if (wrapperLabel) {
-                    label = wrapperLabel.innerText.trim();
-                }
+                const wrapperLabel = field.closest("label");
+                if (wrapperLabel) label = wrapperLabel.innerText.trim();
             }
     
             if (!label && field.hasAttribute("aria-label")) {
@@ -512,27 +532,20 @@ document.addEventListener("DOMContentLoaded", function () {
     
             if (!label && field.hasAttribute("aria-labelledby")) {
                 const labelElement = document.getElementById(field.getAttribute("aria-labelledby"));
-                if (labelElement) {
-                    label = labelElement.innerText.trim();
-                }
+                if (labelElement) label = labelElement.innerText.trim();
             }
     
             if (!label) {
                 const parentDiv = field.closest("div");
                 if (parentDiv) {
                     const possibleLabel = parentDiv.querySelector("span, strong, b");
-                    if (possibleLabel) {
-                        label = possibleLabel.innerText.trim();
-                    }
+                    if (possibleLabel) label = possibleLabel.innerText.trim();
                 }
             }
     
             if (!label) {
-                if (field.placeholder) {
-                    label = field.placeholder.trim();
-                } else if (field.tagName.toLowerCase() === "button") {
-                    label = field.innerText.trim();
-                }
+                if (field.placeholder) label = field.placeholder.trim();
+                else if (field.tagName.toLowerCase() === "button") label = field.innerText.trim();
             }
     
             const fieldType = field.type?.toLowerCase() || field.tagName.toLowerCase();
@@ -547,9 +560,12 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     
-        console.log("📌 Extracted Form Structure:", formStructure);
+        console.log("📋 Final Extracted Form Structure:", formStructure);
         return formStructure;
     }
+    
+
+
     
     
 
