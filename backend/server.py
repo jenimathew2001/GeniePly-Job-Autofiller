@@ -186,6 +186,7 @@ def ai_autofill():
         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
         print("✅ LLM Initialized")
 
+        
         prompt = f"""
 You are a highly intelligent AI assistant for job application autofill. Your task is to fill out a job application form based on the user's resume/profile data.
 
@@ -199,17 +200,14 @@ Each action must have:
 
 ⚡ RULES:
 
-1. **Complete Coverage**:
-    - DO NOT miss any field if it can be filled from the resume/profile.
-    - Always fill personal details if available: First Name, Middle Name, Last Name, Email, Phone Number, Address, Date of Birth, LinkedIn, etc.
-    - Always fill educational background, work experience, and skills wherever matching fields exist.
-    - Prioritize recent experience and latest education first.
-
+1. **Filling ONLY existing fields**:
+    - ONLY fill fields that actually exist in the extracted form fields list provided below.
+    - DO NOT create or imagine new fields.
+    
 2. **Button Clicking (Add Buttons)**:
-    - Detect "Add Education", "Add Experience", "Add Certification" buttons clearly.
-    - Group repeated clicks into a single action using `"times": 3`, `"times": 2`, etc.
+    - Click Add buttons (Education, Experience, Certification) only if matching Add buttons exist in extracted form.
+    - Group repeated clicks into a single action using `"times": 3`, `"times": 2`, etc, if needed.
     - Ignore irrelevant buttons like "Save", "Back", "Settings", "Logout", "Search", "Job Alerts", etc.
-    - Prefer using unique `class`, `data-automation-id`, or visible `label` to identify Add buttons properly.
 
 3. **Radio Buttons**:
     - Select the correct radio button option if profile contains the value (e.g., Gender: Male, Employment Type: Full-time).
@@ -220,38 +218,30 @@ Each action must have:
 5. **Dropdowns (Select fields)**:
     - Choose the most relevant option in dropdowns using text matching wherever possible.
 
-6. **Sensitive Fields**:
-    - If profile does not contain sensitive information like Gender, Caste, Religion, Marital Status, or Phone Number — do not guess. Leave the field blank or skip.
+6. **Typing fields**:
+    - Type into inputs/textareas only if the field exists.
 
-7. **Smart Matching**:
-    - Even if field labels are different, intelligently match them. Example mappings:
-        - "University" → "College/School"
-        - "Company Name" → "Employer"
-        - "Degree" → "Qualification"
-        - "Phone Number" → "Contact Number"
+7. **Sensitive Fields**:
+    - If profile does not contain sensitive information like Gender, Caste, Religion, Marital Status, or Phone Number — skip them.
+
+8. **Matching**:
+    - Match fields even if label names differ slightly (e.g., "University" can match "College").
 
 🔴 Important:
 - NEVER output explanations.
 - ONLY return a JSON array starting with `[` and ending with `]`.
-- No partial or partial-answer outputs allowed.
+- No partial or extra responses allowed.
 
-✅ Example of Good Output:
+✅ Good Example:
 [
   {{ "action": "click", "selector": "button.add-education", "times": 2 }},
-  {{ "action": "type", "selector": "input[name='firstName']", "value": "Mathew" }},
-  {{ "action": "type", "selector": "input[name='lastName']", "value": "Jeni" }},
-  {{ "action": "type", "selector": "input[name='email']", "value": "mathewjeni10@gmail.com" }},
-  {{ "action": "type", "selector": "input[name='phone']", "value": "+91-9876543210" }},
-  {{ "action": "type", "selector": "input[name='degree']", "value": "Bachelor of Technology" }},
-  {{ "action": "select", "selector": "select[name='graduationYear']", "value": "2022" }},
-  {{ "action": "check", "selector": "input[name='agreeTerms']" }},
-  {{ "action": "click", "selector": "button.add-experience", "times": 3 }},
-  {{ "action": "type", "selector": "input[name='company']", "value": "Google" }}
+  {{ "action": "type", "selector": "input[name='addressLine1']", "value": "123 Main Street" }},
+  {{ "action": "select", "selector": "select[name='country']", "value": "United Kingdom" }},
+  {{ "action": "check", "selector": "input[name='preferredCheck']" }},
+  {{ "action": "type", "selector": "input[name='phoneNumber']", "value": "+44-9876543210" }}
 ]
 
----
-
-### Form Fields:
+### Extracted Form Fields:
 {json.dumps(form_fields, indent=2)}
 
 ### Resume/Profile Data:
