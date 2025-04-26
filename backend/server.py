@@ -187,7 +187,6 @@ def ai_autofill():
         print("✅ LLM Initialized")
 
         prompt = f"""
-
 You are a highly intelligent AI assistant for job application autofill. Your task is to fill out a job application form based on the user's resume/profile data.
 
 You MUST return ONLY a valid JSON array of actions. NO explanations. NO headings. NO extra text.
@@ -200,59 +199,65 @@ Each action must have:
 
 ⚡ RULES:
 
-1. **Button Clicking (Add Buttons)**:
+1. **Complete Coverage**:
+    - DO NOT miss any field if it can be filled from the resume/profile.
+    - Always fill personal details if available: First Name, Middle Name, Last Name, Email, Phone Number, Address, Date of Birth, LinkedIn, etc.
+    - Always fill educational background, work experience, and skills wherever matching fields exist.
+    - Prioritize recent experience and latest education first.
+
+2. **Button Clicking (Add Buttons)**:
     - Detect "Add Education", "Add Experience", "Add Certification" buttons clearly.
     - Group repeated clicks into a single action using `"times": 3`, `"times": 2`, etc.
     - Ignore irrelevant buttons like "Save", "Back", "Settings", "Logout", "Search", "Job Alerts", etc.
-    - Prefer using unique `class`, `data-automation-id`, or `label` to identify the Add buttons properly.
+    - Prefer using unique `class`, `data-automation-id`, or visible `label` to identify Add buttons properly.
 
-2. **Radio Buttons**:
-    - If the form has radio buttons (like Gender, Employment Type, Visa Status), select the correct radio option based on profile data.
-    - Example: If profile says "Male", click/select the "Male" radio.
+3. **Radio Buttons**:
+    - Select the correct radio button option if profile contains the value (e.g., Gender: Male, Employment Type: Full-time).
 
-3. **Checkboxes**:
-    - For fields like "I agree to terms" or "Available for relocation", if appropriate from the profile or standard defaults, check the box.
+4. **Checkboxes**:
+    - Check boxes only if appropriate based on profile (e.g., Agreement, Available to relocate).
 
-4. **Dropdowns (Select fields)**:
-    - If a dropdown (select tag) is present (for Degree, Experience Level, Country, etc.), select the most appropriate matching option.
-    - Match using text if possible, not just values.
-
-5. **Typing fields**:
-    - For inputs and textareas, type the correct value from the profile.
-    - Prefer recent experience and latest degree.
+5. **Dropdowns (Select fields)**:
+    - Choose the most relevant option in dropdowns using text matching wherever possible.
 
 6. **Sensitive Fields**:
-    - If profile does not have Gender, Caste, Religion, Marital Status, Phone — do not guess. Leave blank or skip.
+    - If profile does not contain sensitive information like Gender, Caste, Religion, Marital Status, or Phone Number — do not guess. Leave the field blank or skip.
 
-7. **Matching**:
-    - Match intelligently even if field labels are different. For example:
+7. **Smart Matching**:
+    - Even if field labels are different, intelligently match them. Example mappings:
         - "University" → "College/School"
         - "Company Name" → "Employer"
         - "Degree" → "Qualification"
+        - "Phone Number" → "Contact Number"
 
 🔴 Important:
 - NEVER output explanations.
 - ONLY return a JSON array starting with `[` and ending with `]`.
-- No partial answers.
+- No partial or partial-answer outputs allowed.
 
-✅ Good Example:
+✅ Example of Good Output:
 [
   {{ "action": "click", "selector": "button.add-education", "times": 2 }},
+  {{ "action": "type", "selector": "input[name='firstName']", "value": "Mathew" }},
+  {{ "action": "type", "selector": "input[name='lastName']", "value": "Jeni" }},
+  {{ "action": "type", "selector": "input[name='email']", "value": "mathewjeni10@gmail.com" }},
+  {{ "action": "type", "selector": "input[name='phone']", "value": "+91-9876543210" }},
   {{ "action": "type", "selector": "input[name='degree']", "value": "Bachelor of Technology" }},
   {{ "action": "select", "selector": "select[name='graduationYear']", "value": "2022" }},
   {{ "action": "check", "selector": "input[name='agreeTerms']" }},
   {{ "action": "click", "selector": "button.add-experience", "times": 3 }},
-  {{ "action": "type", "selector": "input[name='company']", "value": "Google" }},
-  {{ "action": "select", "selector": "select[name='gender']", "value": "Male" }}
+  {{ "action": "type", "selector": "input[name='company']", "value": "Google" }}
 ]
+
+---
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
 ### Resume/Profile Data:
 {json.dumps(profile_data, indent=2)}
-
 """
+
 
 
         # response = llm.invoke(prompt)
