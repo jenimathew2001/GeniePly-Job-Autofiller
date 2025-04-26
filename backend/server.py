@@ -187,33 +187,71 @@ def ai_autofill():
         print("✅ LLM Initialized")
 
         prompt = f"""
-You are a smart job application AI assistant. Your task is to help a user fill out a job application form using the user's resume/profile data.
 
-Generate step-by-step actions. Each step must include:
+You are a highly intelligent AI assistant for job application autofill. Your task is to fill out a job application form based on the user's resume/profile data.
+
+You MUST return ONLY a valid JSON array of actions. NO explanations. NO headings. NO extra text.
+
+Each action must have:
 - `action`: one of `click`, `type`, `select`, or `check`
-- `selector`: a valid CSS selector
-- `value`: only for `type` and `select`
-- Optional: `times`: for how many times to repeat a click action
+- `selector`: a CSS selector that targets the correct field
+- `value`: (only for `type` and `select` actions)
+- Optional: `times`: (only for `click` actions if multiple clicks needed)
 
-RULES:
-- If a field like 'Add Education' or 'Add Experience' requires clicking multiple times, 
-  generate only ONE click action with a 'times' field (example: "times": 3).
-- DO NOT create multiple 'click' steps for the same button.
-- After clicking to add fields, typing/selecting can happen.
+⚡ RULES:
 
-ONLY RETURN A JSON ARRAY. NO explanations. NO comments.
+1. **Button Clicking (Add Buttons)**:
+    - Detect "Add Education", "Add Experience", "Add Certification" buttons clearly.
+    - Group repeated clicks into a single action using `"times": 3`, `"times": 2`, etc.
+    - Ignore irrelevant buttons like "Save", "Back", "Settings", "Logout", "Search", "Job Alerts", etc.
+    - Prefer using unique `class`, `data-automation-id`, or `label` to identify the Add buttons properly.
 
-Example good response:
+2. **Radio Buttons**:
+    - If the form has radio buttons (like Gender, Employment Type, Visa Status), select the correct radio option based on profile data.
+    - Example: If profile says "Male", click/select the "Male" radio.
+
+3. **Checkboxes**:
+    - For fields like "I agree to terms" or "Available for relocation", if appropriate from the profile or standard defaults, check the box.
+
+4. **Dropdowns (Select fields)**:
+    - If a dropdown (select tag) is present (for Degree, Experience Level, Country, etc.), select the most appropriate matching option.
+    - Match using text if possible, not just values.
+
+5. **Typing fields**:
+    - For inputs and textareas, type the correct value from the profile.
+    - Prefer recent experience and latest degree.
+
+6. **Sensitive Fields**:
+    - If profile does not have Gender, Caste, Religion, Marital Status, Phone — do not guess. Leave blank or skip.
+
+7. **Matching**:
+    - Match intelligently even if field labels are different. For example:
+        - "University" → "College/School"
+        - "Company Name" → "Employer"
+        - "Degree" → "Qualification"
+
+🔴 Important:
+- NEVER output explanations.
+- ONLY return a JSON array starting with `[` and ending with `]`.
+- No partial answers.
+
+✅ Good Example:
 [
-  {{ "action": "click", "selector": ".add-education-btn", "times": 2 }},
-  {{ "action": "type", "selector": "input[name='degree']", "value": "Bachelor of Engineering" }}
+  {{ "action": "click", "selector": "button.add-education", "times": 2 }},
+  {{ "action": "type", "selector": "input[name='degree']", "value": "Bachelor of Technology" }},
+  {{ "action": "select", "selector": "select[name='graduationYear']", "value": "2022" }},
+  {{ "action": "check", "selector": "input[name='agreeTerms']" }},
+  {{ "action": "click", "selector": "button.add-experience", "times": 3 }},
+  {{ "action": "type", "selector": "input[name='company']", "value": "Google" }},
+  {{ "action": "select", "selector": "select[name='gender']", "value": "Male" }}
 ]
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
-### Resume Data:
+### Resume/Profile Data:
 {json.dumps(profile_data, indent=2)}
+
 """
 
 
