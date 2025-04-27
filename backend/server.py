@@ -195,33 +195,27 @@ Generate step-by-step actions. Each step must include:
 - `value`: only for `type` and `select`
 - Optional: `times`: for how many times to repeat a click action
 
-🧠 **Rules:**
-- Fill out **all education** and **all experience entries**, even if they seem only slightly relevant.
-- Click “Add” buttons multiple times if needed (`times` attribute).
-- Only fill in fields where accurate data is available from profile.
-- **Do NOT guess** gender, caste, religion, or phone numbers — skip them if missing.
-- Use short, accurate selectors.
+RULES:
+- If a field like 'Add Education' or 'Add Experience' requires clicking multiple times, 
+  generate only ONE click action with a 'times' field (example: "times": 3).
+- DO NOT create multiple 'click' steps for the same button.
+- After clicking to add fields, typing/selecting can happen.
+
+ONLY RETURN A JSON ARRAY. NO explanations. NO comments.
+
+Example good response:
+[
+  {{ "action": "click", "selector": ".add-education-btn", "times": 2 }},
+  {{ "action": "type", "selector": "input[name='degree']", "value": "Bachelor of Engineering" }}
+]
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
 ### Resume Data:
 {json.dumps(profile_data, indent=2)}
-
-Return ONLY a JSON array like:
-[
-  {{
-    "action": "click",
-    "selector": "button.add-education",
-    "times": 3
-  }},
-  {{
-    "action": "type",
-    "selector": "input[name='institution']",
-    "value": "IIT Delhi"
-  }}
-]
 """
+
 
         # response = llm.invoke(prompt)
 
