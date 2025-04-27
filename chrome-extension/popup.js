@@ -553,11 +553,13 @@ document.addEventListener("DOMContentLoaded", function () {
         fieldText = fieldText.toLowerCase(); // Convert fieldText to lowercase for case-insensitive matching
         return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
     }
-
+    
+    
+    // Function to extract form fields with deeper label search and filtering
     function extractFormFieldsDirectly() {
         console.log("🔍 Extracting form fields...");
     
-        const inputs = document.querySelectorAll("input, textarea, select, button");
+        const inputs = document.querySelectorAll("input, textarea, select");
         let formStructure = [];
     
         inputs.forEach(field => {
@@ -591,7 +593,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
     
-            // Fallback: check for nearby text in a div
+            // If still no label, look for nearest text in a parent div
             if (!label) {
                 let parentDiv = field.closest("div");
                 if (parentDiv) {
@@ -602,34 +604,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
     
-            // Last resort: use placeholder or button text
-            if (!label) {
-                if (field.placeholder) {
-                    label = field.placeholder.trim();
-                } else if (field.tagName.toLowerCase() === "button") {
-                    label = field.innerText.trim();
-                }
+            // Last resort: use placeholder
+            if (!label && field.placeholder) {
+                label = field.placeholder.trim();
             }
-    
-            // Push all types including radio & button
-            const fieldType = field.type?.toLowerCase() || field.tagName.toLowerCase();
     
             formStructure.push({
                 name: field.name || "",
-                id: field.id || "",
+                id: field.id ,
                 label: label,
-                type: field.tagName.toLowerCase(), // input, textarea, select, button
-                fieldType: fieldType // checkbox, radio, text, etc.
+                type: field.tagName.toLowerCase(),
+                fieldType: field.type || "",
             });
         });
     
         console.log("📌 Extracted Form Structure:", formStructure);
         return formStructure;
     }
-    
-    
-    
-    
     
 
     function autofillForm(filledFields) {
