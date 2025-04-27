@@ -187,45 +187,75 @@ def ai_autofill():
         print("✅ LLM Initialized")
 
         prompt = f"""
-You are a smart job application AI assistant.
+You are a smart job application AI assistant. Your task is to help a user fill out a job application form using the user's resume/profile data.
 
-Your tasks:
-- Match form fields based on their labels or names to the profile data provided.
-- Decide whether clicking is needed to create more fields (e.g., Add Education, Add Experience).
-- If clicking is needed, plan click actions first with 'times'.
-- Then plan filling actions (typing/selecting/checking).
+Generate step-by-step actions. Each step must include:
+- `action`: one of `click`, `type`, `select`, or `check`
+- `selector`: a valid CSS selector
+- `value`: only for `type` and `select`
+- Optional: `times`: for how many times to repeat a click action
 
-ONLY RETURN JSON:
-{{
-  "click_steps": [
-    {{ "action": "click", "selector": "css-selector", "times": X }}
-  ],
-  "fill_steps": [
-    {{ "action": "type", "selector": "css-selector", "value": "filled value" }},
-    {{ "action": "select", "selector": "css-selector", "value": "option" }},
-    {{ "action": "check", "selector": "css-selector" }}
-  ]
-}}
-
-No explanation, only JSON.
+🧠 **Rules:**
+- Fill out **all education** and **all experience entries**, even if they seem only slightly relevant.
+- Click “Add” buttons multiple times if needed (`times` attribute).
+- Only fill in fields where accurate data is available from profile.
+- **Do NOT guess** gender, caste, religion, or phone numbers — skip them if missing.
+- Use short, accurate selectors.
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
 ### Resume Data:
 {json.dumps(profile_data, indent=2)}
+
+Return ONLY a JSON array like:
+[
+  {{
+    "action": "click",
+    "selector": "button.add-education",
+    "times": 3
+  }},
+  {{
+    "action": "type",
+    "selector": "input[name='institution']",
+    "value": "IIT Delhi"
+  }}
+]
 """
+
+        # response = llm.invoke(prompt)
 
         ai_message = llm.invoke(prompt)
         text_output = ai_message.content if hasattr(ai_message, 'content') else ai_message
 
-        import re
-        match = re.search(r'\{[\s\S]+\}', text_output)
-        if not match:
-            return jsonify({"error": "Failed to locate JSON in response", "raw": text_output}), 500
+        try:
+            import re
 
-        response_json = json.loads(match.group(0))
+            # Extract the JSON array from the response text
+            match = re.search(r'\[\s*{.*}\s*]', text_output, re.DOTALL)
+            if not match:
+                return jsonify({"error": "Failed to locate JSON array in response", "raw": text_output}), 500
+
+            json_text = match.group(0)
+            response_json = json.loads(json_text)
+
+
+            # response_json = json.loads(text_output)
+        except Exception as e:
+            print("❌ Failed to parse AI response:", text_output)
+            return jsonify({"error": "Failed to parse LLM output", "details": str(e)}), 500
+
+
+
+        # if isinstance(response, str):
+        #     try:
+        #         response = json.loads(response)
+        #     except Exception as e:
+        #         return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
+
+        # return jsonify(response_json)
         return jsonify({"form_fields_filled": response_json})
+
 
     except Exception as e:
         print(f"❌ AI Processing Failed: {e}")
@@ -236,4 +266,3 @@ if __name__ == "__main__":
     if not os.path.exists(USERS_FOLDER):
         os.makedirs(USERS_FOLDER)
     app.run(debug=True)
-
