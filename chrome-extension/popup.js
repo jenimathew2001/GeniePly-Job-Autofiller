@@ -389,7 +389,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ form_fields: extractedFields, profile_data: profileData.cv_json })
+                            body: JSON.stringify({ form_fields: unknownFields, profile_data: profileData.cv_json })
                         });
 
                         aiFilledData = await aiResponse.json();
@@ -411,7 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         {
                             target: { tabId: tabs[0].id },
                             function: executeAgentPlan,
-                            args: [aiFilledData.form_fields_filled]
+                            args: [finalFilledFields]
                         },
                         () => console.log("✅ Form Autofilled")
                     );

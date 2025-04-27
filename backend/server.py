@@ -196,11 +196,13 @@ Generate step-by-step actions. Each step must include:
 - Optional: `times`: for how many times to repeat a click action
 
 🧠 **Rules:**
+- ONLY use fields listed below under "Form Fields".
+- If a field looks irrelevant (like a button named 'Settings'), you can SKIP it.
 - Fill out **all education** and **all experience entries**, even if they seem only slightly relevant.
 - Click “Add” buttons multiple times if needed (`times` attribute).
 - Only fill in fields where accurate data is available from profile.
 - **Do NOT guess** gender, caste, religion, or phone numbers — skip them if missing.
-- Use short, accurate selectors.
+- Use accurate selectors.
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
