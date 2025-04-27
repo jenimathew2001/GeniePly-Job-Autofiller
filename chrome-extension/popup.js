@@ -424,55 +424,38 @@ document.addEventListener("DOMContentLoaded", function () {
      * Extracts matching data from the user profile based on field name or label.
      */
 
-    async function executeAgentPlan(planSteps) {
+    function executeAgentPlan(planSteps) {
         console.log("🤖 Executing AI Agent Plan...");
     
-        const clickSteps = planSteps.filter(step => step.action === "click");
-        const fillSteps = planSteps.filter(step => step.action !== "click");
-    
-        // 1. Execute clicks (Add education/experience buttons)
-        for (const step of clickSteps) {
-            const repeat = step.times || 1;
-            let element = document.querySelector(step.selector);
-    
-            if (!element) {
-                console.warn(`⚠️ Element not found for selector: ${step.selector}`);
-                continue;
-            }
-    
-            for (let i = 0; i < repeat; i++) {
-                element.scrollIntoView({ behavior: "smooth", block: "center" });
-                await new Promise(resolve => setTimeout(resolve, 300)); // wait 300ms between clicks
-                element.click();
-                console.log(`🖱 Clicked: ${step.selector}`);
-            }
-        }
-    
-        // 2. Wait a bit for DOM to update
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    
-        // 3. Execute typing/select/select
-        for (const step of fillSteps) {
+        planSteps.forEach(step => {
             try {
                 const { action, selector, value } = step;
                 const element = document.querySelector(selector);
     
                 if (!element) {
                     console.warn(`⚠️ Element not found for selector: ${selector}`);
-                    continue;
+                    return;
                 }
     
-                if (action === "type") {
+                if (action === "click") {
+                    const repeat = step.times || 1;
+                    for (let i = 0; i < repeat; i++) {
+                        element.click();
+                    } 
+                }
+                else if (action === "type") {
                     element.focus();
                     element.value = value;
                     element.dispatchEvent(new Event("input", { bubbles: true }));
                     element.dispatchEvent(new Event("change", { bubbles: true }));
                     console.log(`⌨️ Typed '${value}' into: ${selector}`);
                 } else if (action === "select") {
-                    const option = Array.from(element.options).find(opt =>
-                        opt.text.toLowerCase().includes(value.toLowerCase()) ||
-                        opt.value.toLowerCase() === value.toLowerCase()
-                    );
+                    
+                    const option = Array.from(element.options).find(opt => {
+                        const val = value.toLowerCase();
+                        return opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val);
+                    });
+                    
                     if (option) {
                         element.value = option.value;
                         element.dispatchEvent(new Event("change", { bubbles: true }));
@@ -486,11 +469,10 @@ document.addEventListener("DOMContentLoaded", function () {
             } catch (e) {
                 console.error("❌ Error executing step:", step, e);
             }
-        }
+        });
     
         console.log("✅ AI Agent Execution Complete");
     }
-    
     
     
 
@@ -638,8 +620,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 label: label,
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
                 fieldType: fieldType, // checkbox, radio, text, etc.
-                classList: Array.from(field.classList).join(" ")
-                
+                classList: Array.from(field.classList).join(" "),
+                dataset: field.dataset || {}
             });
         });
     
