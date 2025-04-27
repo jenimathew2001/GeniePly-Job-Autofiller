@@ -186,31 +186,28 @@ def ai_autofill():
         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
         print("✅ LLM Initialized")
 
-        
         prompt = f"""
-You are a smart job application AI assistant. Your task is to help a user fill out a job application form using the user's resume/profile data.
+You are a smart job application AI assistant.
 
-Generate step-by-step actions. Each step must include:
-- action: one of click, type, select, or check
-- selector: a valid CSS selector
-- value: only for type and select
-- Optional: times: for how many times to repeat a click action
+Your tasks:
+- Match form fields based on their labels or names to the profile data provided.
+- Decide whether clicking is needed to create more fields (e.g., Add Education, Add Experience).
+- If clicking is needed, plan click actions first with 'times'.
+- Then plan filling actions (typing/selecting/checking).
 
-RULES:
-- If a field like 'Add Education' or 'Add Experience' requires clicking multiple times, 
-  generate only ONE click action with a 'times' field (example: "times": 3).
-- DO NOT create multiple 'click' steps for the same button.
-- After clicking to add fields, typing/selecting can happen.
+ONLY RETURN JSON:
+{{
+  "click_steps": [
+    {{ "action": "click", "selector": "css-selector", "times": X }}
+  ],
+  "fill_steps": [
+    {{ "action": "type", "selector": "css-selector", "value": "filled value" }},
+    {{ "action": "select", "selector": "css-selector", "value": "option" }},
+    {{ "action": "check", "selector": "css-selector" }}
+  ]
+}}
 
-ONLY RETURN A JSON ARRAY. NO explanations. NO comments.
-
-Example good response:
-[
-  {{ "action": "type", "selector": "input[name='addressLine1']", "value": "123 Main Street" }},
-  {{ "action": "select", "selector": "select[name='country']", "value": "United Kingdom" }},
-  {{ "action": "click", "selector": ".add-education-btn", "times": 2 }},
-  {{ "action": "type", "selector": "input[name='degree']", "value": "Bachelor of Engineering" }}
-]
+No explanation, only JSON.
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
@@ -219,41 +216,16 @@ Example good response:
 {json.dumps(profile_data, indent=2)}
 """
 
-
-
-        # response = llm.invoke(prompt)
-
         ai_message = llm.invoke(prompt)
         text_output = ai_message.content if hasattr(ai_message, 'content') else ai_message
 
-        try:
-            import re
+        import re
+        match = re.search(r'\{[\s\S]+\}', text_output)
+        if not match:
+            return jsonify({"error": "Failed to locate JSON in response", "raw": text_output}), 500
 
-            # Extract the JSON array from the response text
-            match = re.search(r'\[\s*{.*}\s*]', text_output, re.DOTALL)
-            if not match:
-                return jsonify({"error": "Failed to locate JSON array in response", "raw": text_output}), 500
-
-            json_text = match.group(0)
-            response_json = json.loads(json_text)
-
-
-            # response_json = json.loads(text_output)
-        except Exception as e:
-            print("❌ Failed to parse AI response:", text_output)
-            return jsonify({"error": "Failed to parse LLM output", "details": str(e)}), 500
-
-
-
-        # if isinstance(response, str):
-        #     try:
-        #         response = json.loads(response)
-        #     except Exception as e:
-        #         return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
-
-        # return jsonify(response_json)
+        response_json = json.loads(match.group(0))
         return jsonify({"form_fields_filled": response_json})
-
 
     except Exception as e:
         print(f"❌ AI Processing Failed: {e}")

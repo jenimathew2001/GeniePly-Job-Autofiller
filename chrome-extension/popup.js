@@ -314,256 +314,183 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+// -----------------------------------------------------------------------------------    
 
-    document.getElementById("autofill-button").addEventListener("click", function () {
-        console.log("🔹 Autofill button clicked!");
-    
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            if (!tabs[0]) {
-                console.error("❌ No active tab found.");
-                return;
-            }
-    
-            chrome.scripting.executeScript(
-                {
-                    target: { tabId: tabs[0].id },
-                    function: extractFormFieldsDirectly
-                },
-                async (injectionResults) => {
-                    if (chrome.runtime.lastError) {
-                        console.error("❌ Error injecting script:", chrome.runtime.lastError.message);
-                        return;
-                    }
-    
-                    if (!injectionResults || !injectionResults[0].result) {
-                        console.error("❌ Failed to extract form fields.");
-                        return;
-                    }
-    
-                    let extractedFields = injectionResults[0].result;
-                    console.log("📋 Raw Extracted Form Fields:", extractedFields);
-    
-                    // Filter out unnecessary fields
-                    extractedFields = extractedFields.filter(field =>
-                        field.fieldType !== "hidden" &&
-                        !field.label.toLowerCase().includes("cookie") &&
-                        !field.label.toLowerCase().includes("switch") &&
-                        !field.name.includes("vendor") &&
-                        !field.name.includes("chkbox")
-                    );
-    
-                    console.log("✅ Filtered Form Fields:", extractedFields);
-    
-                    const enteredEmail = sessionStorage.getItem("enteredEmail");
-                    const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
-                    const profileData = await profileResponse.json();
-    
-                    if (!profileData.cv_json || Object.keys(profileData.cv_json).length === 0) {
-                        alert("Please upload a CV or manually fill in your profile.");
-                        return;
-                    }
-    
-                    console.log("✅ Loaded Profile:", profileData);
-    
-                    // 🧠 Phase 1: Ask AI what to click and fill
-                    const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ form_fields: extractedFields, profile_data: profileData.cv_json })
-                    });
-    
-                    const aiData = await aiResponse.json();
-                    console.log("🤖 AI Response:", aiData);
-    
-                    if (!aiData || !Array.isArray(aiData.form_fields_filled)) {
-                        console.error("❌ AI response invalid or missing:", aiData);
-                        return;
-                    }
-    
-                    const clickSteps = aiData.form_fields_filled.filter(step => step.action === "click");
-                    const fillSteps = aiData.form_fields_filled.filter(step => step.action !== "click");
-    
-                    console.log("🖱 Click Steps (Add buttons):", clickSteps);
-                    console.log("⌨️ Fill Steps (input/select/check):", fillSteps);
-    
-                    // Phase 2: First, Click the Add buttons dynamically
-                    chrome.scripting.executeScript(
-                        {
-                            target: { tabId: tabs[0].id },
-                            function: executeClickPhase,
-                            args: [clickSteps]
-                        },
-                        async () => {
-                            console.log("✅ Finished clicking Add buttons. Waiting for new fields to load...");
-    
-                            // Wait for DOM update
-                            await new Promise(resolve => setTimeout(resolve, 1500));
-    
-                            // Phase 3: Extract updated fields after click
-                            chrome.scripting.executeScript(
-                                {
-                                    target: { tabId: tabs[0].id },
-                                    function: extractFormFieldsDirectly
-                                },
-                                async (newExtraction) => {
-                                    if (!newExtraction || !newExtraction[0]?.result) {
-                                        console.error("❌ Failed to re-extract updated form fields");
-                                        return;
-                                    }
-    
-                                    const updatedFields = newExtraction[0].result;
-                                    console.log("🔄 Updated Form Structure After Clicks:", updatedFields);
-    
-                                    // Phase 4: Now finally Fill Fields
-                                    chrome.scripting.executeScript(
-                                        {
-                                            target: { tabId: tabs[0].id },
-                                            function: executeFillPhase,
-                                            args: [fillSteps]
-                                        },
-                                        () => console.log("✅ Autofilling Completed!")
-                                    );
-                                }
-                            );
-                        }
-                    );
-                }
-            );
-        });
+     
+    document.getElementById("autofill-button").addEventListener("click", async function () {
+    console.log("🔹 Autofill button clicked!");
+
+    const tabs = await new Promise(resolve => chrome.tabs.query({ active: true, currentWindow: true }, resolve));
+    if (!tabs[0]) {
+        console.error("❌ No active tab found.");
+        return;
+    }
+    const tabId = tabs[0].id;
+
+    // Step 1: Extract all possible fields
+    const extractionResult = await chrome.scripting.executeScript({
+        target: { tabId },
+        function: extractRelevantFormFields
     });
-    
-    
-    // 🖱 Phase 1: Perform all Click actions
-    function executeClickPhase(clickSteps) {
-        console.log("🖱 Executing Click Phase...");
-    
-        clickSteps.forEach(step => {
-            const { selector, times } = step;
-            const repeat = times || 1;
-    
-            const elements = document.querySelectorAll(selector);
-    
-            if (!elements.length) {
-                console.warn(`⚠️ No clickable element found for selector: ${selector}`);
-                return;
-            }
-    
-            console.log(`➡️ Found ${elements.length} element(s) for clicking [${selector}]`);
-    
-            for (let i = 0; i < repeat; i++) {
-                elements.forEach(el => {
-                    el.scrollIntoView({ behavior: "smooth", block: "center" });
-                    setTimeout(() => {
-                        el.click();
-                        console.log(`🖱 Clicked ${selector}`);
-                    }, 100 * i);
-                });
-            }
-        });
+
+    const extractedFields = extractionResult[0]?.result || [];
+    console.log("📋 Extracted Relevant Fields:", extractedFields);
+
+    if (extractedFields.length === 0) {
+        console.error("❌ No fields found to autofill.");
+        return;
     }
-    
-    
-    // ⌨️ Phase 2: Fill all fields (type/select/check)
-    function executeFillPhase(fillSteps) {
-        console.log("⌨️ Executing Fill Phase...");
-    
-        fillSteps.forEach(step => {
-            const { action, selector, value } = step;
-            const element = document.querySelector(selector);
-    
-            if (!element) {
-                console.warn(`⚠️ No element found for selector: ${selector}`);
-                return;
-            }
-    
-            if (action === "type") {
-                element.focus();
-                element.value = value;
-                element.dispatchEvent(new Event("input", { bubbles: true }));
+
+    // Step 2: Fetch Profile
+    const enteredEmail = sessionStorage.getItem("enteredEmail");
+    const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
+    const profileData = await profileResponse.json();
+
+    if (!profileData.cv_json || Object.keys(profileData.cv_json).length === 0) {
+        alert("❗ Please upload a CV or fill profile manually.");
+        return;
+    }
+    console.log("✅ Loaded Profile Data");
+
+    // Step 3: Ask AI to Plan Autofill
+    const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ form_fields: extractedFields, profile_data: profileData.cv_json })
+    });
+
+    const aiData = await aiResponse.json();
+    if (!aiData?.form_fields_filled) {
+        console.error("❌ Invalid AI response:", aiData);
+        return;
+    }
+
+    const { click_steps = [], fill_steps = [] } = aiData.form_fields_filled;
+
+    console.log("🖱 Planned Click Steps:", click_steps);
+    console.log("⌨️ Planned Fill Steps:", fill_steps);
+
+    // Step 4: Click if needed
+    if (click_steps.length > 0) {
+        await chrome.scripting.executeScript({
+            target: { tabId },
+            function: executeClickSteps,
+            args: [click_steps]
+        });
+        console.log("✅ Click Phase Done");
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for DOM to update after clicks
+    }
+
+    // Step 5: Fill Fields
+    await chrome.scripting.executeScript({
+        target: { tabId },
+        function: executeFillSteps,
+        args: [fill_steps]
+    });
+    console.log("✅ Autofill Completed");
+});
+
+// --- Functions injected into page --- //
+
+    function extractRelevantFormFields() {
+    console.log("🔍 Extracting relevant fields...");
+
+    const allFields = document.querySelectorAll("input, textarea, select, button");
+    const relevantFields = [];
+
+    allFields.forEach(field => {
+        const tag = field.tagName.toLowerCase();
+        const type = field.type ? field.type.toLowerCase() : tag;
+        const id = field.id || "";
+        const name = field.name || "";
+        const classList = Array.from(field.classList).join(" ");
+        let label = "";
+
+        if (id) {
+            const labelElement = document.querySelector(`label[for="${id}"]`);
+            if (labelElement) label = labelElement.innerText.trim();
+        }
+        if (!label && field.closest("label")) {
+            label = field.closest("label").innerText.trim();
+        }
+        if (!label && field.hasAttribute("aria-label")) {
+            label = field.getAttribute("aria-label").trim();
+        }
+        if (!label && field.placeholder) {
+            label = field.placeholder.trim();
+        }
+        if (!label && tag === "button") {
+            label = field.innerText.trim();
+        }
+
+        // Filter out irrelevant buttons or inputs
+        const combinedText = (label + " " + name + " " + id + " " + classList).toLowerCase();
+        if (/(save|settings|newsletter|subscribe|logout|filter|search)/i.test(combinedText)) {
+            return; // skip irrelevant
+        }
+
+        relevantFields.push({ tag, type, id, name, label, classList });
+    });
+
+    console.log("📋 Relevant Fields Extracted:", relevantFields);
+    return relevantFields;
+}
+
+    function executeClickSteps(clickSteps) {
+    console.log("🖱 Executing Click Steps...");
+    clickSteps.forEach(step => {
+        const { selector, times = 1 } = step;
+        const element = document.querySelector(selector);
+
+        if (!element) {
+            console.warn(`⚠️ Cannot find clickable element: ${selector}`);
+            return;
+        }
+
+        for (let i = 0; i < times; i++) {
+            setTimeout(() => {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+                element.click();
+                console.log(`🖱 Clicked ${selector}`);
+            }, 200 * i);
+        }
+    });
+}
+
+    function executeFillSteps(fillSteps) {
+    console.log("⌨️ Executing Fill Steps...");
+    fillSteps.forEach(step => {
+        const { action, selector, value } = step;
+        const element = document.querySelector(selector);
+
+        if (!element) {
+            console.warn(`⚠️ Cannot find field to fill: ${selector}`);
+            return;
+        }
+
+        if (action === "type") {
+            element.focus();
+            element.value = value;
+            element.dispatchEvent(new Event("input", { bubbles: true }));
+            element.dispatchEvent(new Event("change", { bubbles: true }));
+        } else if (action === "select") {
+            const option = Array.from(element.options).find(opt => 
+                opt.text.toLowerCase().includes(value.toLowerCase()) ||
+                opt.value.toLowerCase().includes(value.toLowerCase())
+            );
+            if (option) {
+                element.value = option.value;
                 element.dispatchEvent(new Event("change", { bubbles: true }));
-                console.log(`⌨️ Typed '${value}' into: ${selector}`);
-            } else if (action === "select") {
-                const option = Array.from(element.options).find(opt =>
-                    opt.text.toLowerCase().includes(value.toLowerCase()) ||
-                    opt.value.toLowerCase().includes(value.toLowerCase())
-                );
-                if (option) {
-                    element.value = option.value;
-                    element.dispatchEvent(new Event("change", { bubbles: true }));
-                    console.log(`🔽 Selected '${option.value}' in: ${selector}`);
-                } else {
-                    console.warn(`⚠️ No matching option found for value '${value}' in: ${selector}`);
-                }
-            } else if (action === "check") {
-                element.checked = true;
-                element.dispatchEvent(new Event("change", { bubbles: true }));
-                console.log(`☑️ Checked: ${selector}`);
             }
-        });
+        } else if (action === "check") {
+            element.checked = true;
+            element.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    });
+    console.log("✅ Fill Steps Completed");
+}
     
-        console.log("✅ Autofill phase complete!");
-    }
-    
-    
-    // 🔍 Form Extraction Function
-    function extractFormFieldsDirectly() {
-        console.log("🔍 Extracting form fields...");
-        const inputs = document.querySelectorAll("input, textarea, select, button");
-    
-        let formStructure = [];
-    
-        inputs.forEach(field => {
-            let label = "";
-            let fieldId = field.id || field.name || "";
-    
-            if (fieldId) {
-                const directLabel = document.querySelector(`label[for="${fieldId}"]`);
-                if (directLabel) label = directLabel.innerText.trim();
-            }
-    
-            if (!label) {
-                const wrapperLabel = field.closest("label");
-                if (wrapperLabel) label = wrapperLabel.innerText.trim();
-            }
-    
-            if (!label && field.hasAttribute("aria-label")) {
-                label = field.getAttribute("aria-label").trim();
-            }
-    
-            if (!label && field.hasAttribute("aria-labelledby")) {
-                const labelElement = document.getElementById(field.getAttribute("aria-labelledby"));
-                if (labelElement) label = labelElement.innerText.trim();
-            }
-    
-            if (!label) {
-                const parentDiv = field.closest("div");
-                if (parentDiv) {
-                    const possibleLabel = parentDiv.querySelector("span, strong, b");
-                    if (possibleLabel) label = possibleLabel.innerText.trim();
-                }
-            }
-    
-            if (!label) {
-                if (field.placeholder) label = field.placeholder.trim();
-                else if (field.tagName.toLowerCase() === "button") label = field.innerText.trim();
-            }
-    
-            const fieldType = field.type?.toLowerCase() || field.tagName.toLowerCase();
-    
-            formStructure.push({
-                name: field.name || "",
-                id: field.id || "",
-                label: label,
-                type: field.tagName.toLowerCase(),
-                fieldType: fieldType,
-                classList: Array.from(field.classList).join(" ")
-            });
-        });
-    
-        console.log("📋 Final Extracted Form Structure:", formStructure);
-        return formStructure;
-    }
-    
+// -----------------------------------------------------------------------------------    
     
     
 
