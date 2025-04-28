@@ -187,28 +187,47 @@ def ai_autofill():
         print("✅ LLM Initialized")
 
         prompt = f"""
-You are a smart job application AI assistant. Your task is to help a user fill out a job application form using the user's resume/profile data.
+You are a smart job application AI assistant.
 
-Generate step-by-step actions. Each step must include:
-- `action`: one of `click`, `type`, `select`, or `check`
-- `selector`: a valid CSS selector
-- `value`: only for `type` and `select`
-- Optional: `times`: for how many times to repeat a click action
-
-🧠 **Rules:**
-- Fill out **all education** and **all experience entries**, even if they seem only slightly relevant.
-- Click “Add” buttons multiple times if needed (`times` attribute).
-- Only fill in fields where accurate data is available from profile.
-- **Do NOT guess** gender, caste, religion, or phone numbers — skip them if missing.
-- Use short, accurate selectors.
+Your task is to update ONLY the following fields listed under "Form Fields" below.
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
+Each form field must be rewritten following these rules:
+- `action`: one of "click", "type", "select", or "check"
+- `selector`: use a valid CSS selector (preferably field's "id", or "name", or based on "label")
+- `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
+- `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
+
+You MUST carefully go through the Resume Data and fill appropriate values.
+
 ### Resume Data:
 {json.dumps(profile_data, indent=2)}
 
-Return ONLY a JSON array like:
+---
+Return ONLY a strict JSON array. 
+No extra text, no explanation, no comments outside the array.
+
+Example 1:
+If a field from Form Fields looks like:
+{{
+    "fieldType": "text",
+    "id": "address--city",
+    "label": "City or Town",
+    "name": "city",
+    "type": "input"
+}}
+
+You should update it like:
+{{
+    "action": "type",
+    "selector": "#address--city",
+    "value": "London"
+}}
+
+Example 2:
+Final JSON array must look like:
 [
   {{
     "action": "click",
@@ -221,7 +240,17 @@ Return ONLY a JSON array like:
     "value": "IIT Delhi"
   }}
 ]
+
+---
+🛑 STRICT JSON RULES:
+- No markdown formatting like ```json
+- No explanation text before or after JSON
+- No extra fields that are not listed under Form Fields
+- No guessing if Resume Data does not have the correct information
+
+ONLY return the JSON array as final output.
 """
+
 
         # response = llm.invoke(prompt)
 
