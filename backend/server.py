@@ -192,13 +192,16 @@ def ai_autofill():
 
         # 5. Build a concise prompt
         prompt = f"""
-You are a job-application AI assistant. Generate a JSON array of steps to fill the following form.
+You are an expert job-application AI agent.
 
-**IMPORTANT RULES:**
-- Each object must contain all these fields: "action", "selector", "value", and "times".
-- Always include "times" explicitly as an integer. If unsure, use 1.
-- Do NOT omit any required fields even if they seem optional.
-- Return ONLY the pure JSON array. No explanations, no wrapping.
+Generate a JSON array of form-filling steps.
+
+**Rules:**
+- Each step must include "action", "selector", "value", and "times" — even for click/check.
+- For "click" or "check" actions, set "value" explicitly to an empty string ("").
+- For "type" or "select" actions, set "value" to the appropriate input.
+- Always set "times" as an integer (default 1).
+- Strictly output ONLY the raw JSON array — no wrapping, no explanations.
 
 Form Fields:
 {json.dumps(form_fields, indent=2)}
