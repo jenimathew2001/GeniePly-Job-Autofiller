@@ -344,13 +344,23 @@ document.addEventListener("DOMContentLoaded", function () {
                     let extractedFields = injectionResults[0].result;
     
                     // Filter out unnecessary fields
+
                     extractedFields = extractedFields.filter(field =>
                         field.fieldType !== "hidden" &&
-                        !field.label.toLowerCase().includes("cookie") &&
-                        !field.label.toLowerCase().includes("switch") &&
-                        !field.name.includes("vendor") &&
-                        !field.name.includes("chkbox")
+                        field.fieldType !== "submit" && // new
+                        field.fieldType !== "button" && field.label.toLowerCase().includes("save") === false &&  // new
+                        field.label.toLowerCase().includes("cookie") === false &&
+                        field.label.toLowerCase().includes("switch") === false &&
+                        field.label.toLowerCase().includes("settings") === false && // new
+                        field.label.toLowerCase().includes("menu") === false &&    // new
+                        field.label.toLowerCase().includes("account") === false && // new
+                        field.label.toLowerCase().includes("language") === false && // new
+                        field.label.toLowerCase().includes("submit") === false &&   // new
+                        field.label.toLowerCase().includes("save") === false &&     // new
+                        field.name?.includes("vendor") === false &&
+                        field.name?.includes("chkbox") === false
                     );
+                    
     
                     console.log("✅ Filtered Form Fields:", extractedFields);
     
@@ -378,8 +388,24 @@ document.addEventListener("DOMContentLoaded", function () {
                             unknownFields.push(field); // Send only unknown fields to AI
                         }
                     });
+
+                    
+
+                    let profileActions = knownFields.map(field => ({
+                        action: "type",
+                        selector: field.id
+                          ? `#${field.id}`
+                          : field.name
+                            ? `[name="${field.name}"]`
+                            : field.label
+                              ? `input[placeholder*="${field.label}"],input[aria-label*="${field.label}"],input[title*="${field.label}"]`
+                              : "",
+                        value: field.value
+                      }));
+                      
+                      
     
-                    console.log("✅ Directly Matched Fields from Profile:", knownFields);
+                    console.log("✅ Directly Matched Fields from Profile:", profileActions);
                     console.log("❓ Unknown Fields (to send to AI):", unknownFields);
 
 
@@ -404,7 +430,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
     
                     // Merge both known and AI-filled fields
-                    const finalFilledFields = [...knownFields, ...aiFilledData.form_fields_filled];
+                    const finalFilledFields = [...profileActions, ...aiFilledData.form_fields_filled];
 
                     console.log("Final Fields:", finalFilledFields);
     

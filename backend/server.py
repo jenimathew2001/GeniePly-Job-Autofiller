@@ -234,9 +234,17 @@ Update Form fields and Return ONLY a JSON array like:
 
             # Extract the JSON array from the response text
             match = re.search(r'\[\s*{.*}\s*]', text_output, re.DOTALL)
+            
             if not match:
-                return jsonify({"error": "Failed to locate JSON array in response", "raw": text_output}), 500
+                # Try to fix common JSON mistakes
+                text_output = text_output.replace('\n', '').replace('\r', '')
+                text_output = text_output.split('```')[0]  # remove any ``` markers
+                try:
+                    response_json = json.loads(text_output)
+                except Exception as e:
+                    return jsonify({"error": "Failed to parse LLM output (after cleaning)", "details": str(e), "raw": text_output}), 500
 
+                
             json_text = match.group(0)
             response_json = json.loads(json_text)
 
