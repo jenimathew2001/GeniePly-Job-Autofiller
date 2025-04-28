@@ -531,26 +531,16 @@ document.addEventListener("DOMContentLoaded", function () {
             "firstname": firstName,
             "middlename": middleName,
             "lastname": lastName,
-            "education": profile.education?.[0]?.degree || "",
-            "university": profile.education?.[0]?.institution || "",
-            "experience": profile.experience?.[0]?.title || "",
-            "company": profile.experience?.[0]?.company || "",
-            "jobtitle": profile.experience?.[0]?.title || "",
             "skills": profile.skills?.join(", ") || "",
         };
     
         // **🔹 Fix: Improved Keyword Mapping for More Flexibility**
         const keywordMappings = {
             "email": ["email", "e-mail", "contact email", "email address", "work email"],
-            "phone": ["phone", "mobile", "contact number", "telephone"],
+            "phone": ["phone number", "mobile", "contact number", "telephone"],
             "firstname": ["first name", "firstname", "given name", "fname"],
             "middlename": ["middle name", "middlename"],
             "lastname": ["last name", "lastname", "surname", "lname"],
-            "education": ["degree", "qualification", "major"],
-            "university": ["university", "college", "school", "institution"],
-            "experience": ["job title", "position", "work"],
-            "company": ["company", "organization", "employer"],
-            "jobtitle": ["title", "role", "position"],
             "skills": ["skills", "expertise", "abilities"]
         };
     
