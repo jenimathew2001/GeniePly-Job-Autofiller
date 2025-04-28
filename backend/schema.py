@@ -152,7 +152,7 @@ autofill_schema = {
 # Define the schema for an array of agent steps
 autofill_agent_schema = {
     "title": "autofill_agent_steps",
-    "description": "List of step-by-step actions to fill out the form",
+    "description": "A list of step-by-step actions (click/type/select/check) to fill a job application form",
     "type": "array",
     "items": {
         "type": "object",
@@ -160,19 +160,20 @@ autofill_agent_schema = {
             "action": {
                 "type": "string",
                 "enum": ["click", "type", "select", "check"],
-                "description": "The action to perform"
+                "description": "Which action to perform"
             },
             "selector": {
                 "type": "string",
-                "description": "CSS selector targeting the element"
+                "description": "CSS selector to target the element"
             },
             "value": {
                 "type": "string",
-                "description": "Value for type/select actions"
+                "description": "Value for type/select actions",
+                "default": ""
             },
             "times": {
                 "type": "integer",
-                "description": "Number of times to repeat click",
+                "description": "How many times to repeat a click",
                 "default": 1
             }
         },

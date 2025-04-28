@@ -172,57 +172,57 @@ def get_user_profile(email):
 @app.route("/ai-autofill", methods=["POST"])
 def ai_autofill():
     data = request.json or {}
-    form_fields = data.get("form_fields", [])
-    profile_data = data.get("profile_data", {})
+    form_fields = data.get("form_fields")
+    profile_data = data.get("profile_data")
 
-    if not form_fields or not profile_data:
-        return jsonify({"error": "Missing form_fields or profile_data"}), 400
+    # 2. Basic validation
+    if not isinstance(form_fields, list) or not profile_data:
+        return jsonify({"error": "Missing or invalid form_fields / profile_data"}), 400
 
-    # Load API key
+    # 3. Load API key
     api_key = get_api_key()
     if not api_key:
         return jsonify({"error": "Missing API key"}), 500
     os.environ["GROQ_API_KEY"] = api_key
 
     try:
-        # Initialize the LLM and wrap it with the structured output schema
+        # 4. Init LLM and wrap with structured output
         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
         structured_llm = llm.with_structured_output(autofill_agent_schema)
 
-        # Build the agentic prompt
+        # 5. Build a concise prompt
         prompt = f"""
-You are a smart job application AI assistant.
+You are a job-application AI assistant. Generate a JSON array of steps to fill this form.
 
-Your job is to generate a precise list of actions (click, type, select, check) to fill out this web form,
-using ONLY the form fields listed below and the user's resume data.
-
-Return a JSON array of objects with:
-- action: "click" | "type" | "select" | "check"
-- selector: valid CSS selector
-- value: for "type"/"select" only (omit or empty string otherwise)
-- times: integer, how many times to click (default 1)
-
-### Form Fields:
+Form Fields:
 {json.dumps(form_fields, indent=2)}
 
-### Resume Data:
+User Resume Data:
 {json.dumps(profile_data, indent=2)}
+
+Each step must be an object with:
+- action: one of "click", "type", "select", "check"
+- selector: valid CSS selector
+- value: for "type"/"select" (omit or empty otherwise)
+- times: integer, how many times to click (default 1)
+
+Return ONLY the JSON array—no explanations.
 """
-        # Invoke the AI and get a pure Python list of dicts
+
+        # 6. Invoke and get a pure Python list
         plan_steps = structured_llm.invoke(prompt)
 
-        # Validate type
+        # 7. Validate
         if not isinstance(plan_steps, list):
-            return jsonify({"error": "LLM returned wrong structure"}), 500
+            return jsonify({"error": "LLM returned invalid structure"}), 500
 
-        # Return under the expected key
+        # 8. Return under expected key
         return jsonify({"form_fields_filled": plan_steps})
 
     except Exception as e:
-        # Log and return error details
-        print(f"❌ AI Processing Failed: {e}")
+        # 9. Catch all and report
+        print(f"❌ AI processing failed: {e}")
         return jsonify({"error": "AI processing failed", "details": str(e)}), 500
-
 
 if __name__ == "__main__":
     if not os.path.exists(USERS_FOLDER):
