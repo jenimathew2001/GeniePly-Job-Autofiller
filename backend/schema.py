@@ -151,8 +151,9 @@ autofill_schema = {
 
 # Define the schema for an array of agent steps
 autofill_agent_schema = {
-    "type": "array",
+    "title": "autofill_agent_steps",
     "description": "List of step-by-step actions to fill out the form",
+    "type": "array",
     "items": {
         "type": "object",
         "properties": {
