@@ -192,29 +192,21 @@ def ai_autofill():
 
         # 5. Build a concise prompt
         prompt = f"""
-You are a job-application AI assistant. Generate a JSON array of steps to fill this form.
+You are a job-application AI assistant. Generate a JSON array of steps to fill the following form.
 
-**IMPORTANT:**  
-- Return ONLY the JSON array of steps (no tool names, no XML, no comments).  
-- DO NOT wrap the output inside <tool-use> or any other tags.  
-- DO NOT add extra text, explanation, markdown, or formatting.  
-- Strictly produce a **raw JSON array** that matches the schema.
+**IMPORTANT RULES:**
+- Each object must contain all these fields: "action", "selector", "value", and "times".
+- Always include "times" explicitly as an integer. If unsure, use 1.
+- Do NOT omit any required fields even if they seem optional.
+- Return ONLY the pure JSON array. No explanations, no wrapping.
 
 Form Fields:
 {json.dumps(form_fields, indent=2)}
 
 User Resume Data:
 {json.dumps(profile_data, indent=2)}
-
-Each step must be an object with:
-- action: one of "click", "type", "select", "check"
-- selector: valid CSS selector
-- value: for "type"/"select" (omit or empty otherwise)
-- times: integer, how many times to click (default 1)
-
-Return ONLY the JSON array—no explanations.
 """
-
+        
         # 6. Invoke and get a pure Python list
         plan_steps = structured_llm.invoke(prompt)
         print('AI OUTPUT',plan_steps)
