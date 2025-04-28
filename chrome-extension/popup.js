@@ -345,6 +345,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
                     // Filter out unnecessary fields
 
+                    console.log("✅ Extracted Form Fields:", extractedFields);
+
                     extractedFields = extractedFields.filter(field =>
                         (field.id || field.name || field.label) &&
                         field.fieldType !== "hidden" &&
