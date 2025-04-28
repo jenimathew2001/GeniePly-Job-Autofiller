@@ -405,6 +405,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
                     // Merge both known and AI-filled fields
                     const finalFilledFields = [...knownFields, ...aiFilledData.form_fields_filled];
+
+                    console.log("Final Fields:", finalFilledFields);
     
                     // Autofill form
                     chrome.scripting.executeScript(

@@ -198,7 +198,6 @@ Generate step-by-step actions. Each step must include:
 🧠 **Rules:**
 - ONLY use fields listed below under "Form Fields".
 - If a field looks irrelevant (like a button named 'Settings'), you can SKIP it.
-- Fill out **all education** and **all experience entries**, even if they seem only slightly relevant.
 - Click “Add” buttons multiple times if needed (`times` attribute).
 - Only fill in fields where accurate data is available from profile.
 - **Do NOT guess** gender, caste, religion, or phone numbers — skip them if missing.
@@ -210,7 +209,7 @@ Generate step-by-step actions. Each step must include:
 ### Resume Data:
 {json.dumps(profile_data, indent=2)}
 
-Return ONLY a JSON array like:
+Update Form fields and Return ONLY a JSON array like:
 [
   {{
     "action": "click",
