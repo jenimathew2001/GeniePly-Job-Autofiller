@@ -247,6 +247,8 @@ Final JSON array must look like:
 ]
 
 ---
+Remember if n number of fields are being given to you I want only those updated n in the response!
+
 🛑 STRICT JSON RULES:
 - No markdown formatting like ```json
 - No explanation text before or after JSON
