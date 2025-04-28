@@ -200,6 +200,11 @@ Each form field must be rewritten following these rules:
 - `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
 - `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
 
+### Special Rule for "Add" Buttons:
+- If there is an "Add" button (example: to add Education, Experience, Skills, etc.), you MUST click it multiple times.
+- The number of clicks should be (Total number of entries in Resume Data).
+- Example: If there are 3 Experiences in resume, and the form already shows 1 entry, you need to click "Add Experience" **2 times** (`times: 2`).
+
 You MUST carefully go through the Resume Data and fill appropriate values.
 
 ### Resume Data:
