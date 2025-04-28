@@ -349,7 +349,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         (field.id || field.name || field.label) &&
                         field.fieldType !== "hidden" &&
                         field.fieldType !== "submit" && // new
-                        field.fieldType !== "button" && field.label.toLowerCase().includes("save") === false &&  // new
+                        //field.fieldType !== "button" && field.label.toLowerCase().includes("save") === false &&  // new
                         field.label.toLowerCase().includes("cookie") === false &&
                         field.label.toLowerCase().includes("switch") === false &&
                         field.label.toLowerCase().includes("settings") === false && // new
@@ -540,7 +540,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "phone": ["phone number", "mobile", "contact number", "telephone"],
             "firstname": ["first name", "firstname", "given name", "fname"],
             "middlename": ["middle name", "middlename"],
-            "lastname": ["last name", "lastname", "surname", "lname"],
+            "lastname": ["last name", "lastname", "surname"],
             "skills": ["skills", "expertise", "abilities"]
         };
     
