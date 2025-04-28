@@ -5,7 +5,7 @@ from backend.extract_cv_data import extract_text_from_pdf, get_json_resume, get_
 import json
 
 from langchain.chat_models import init_chat_model
-from backend.schema import autofill_schema
+from backend.schema import autofill_schema, autofill_agent_schema
 
 from supabase import create_client, Client
 
@@ -171,104 +171,57 @@ def get_user_profile(email):
 
 @app.route("/ai-autofill", methods=["POST"])
 def ai_autofill():
-    data = request.json
+    data = request.json or {}
     form_fields = data.get("form_fields", [])
     profile_data = data.get("profile_data", {})
 
     if not form_fields or not profile_data:
-        return jsonify({"error": "Missing form fields or profile data"}), 400
+        return jsonify({"error": "Missing form_fields or profile_data"}), 400
 
-    print("✅ Received Form Fields:", form_fields)
-    print("✅ Received Profile Data:", profile_data)
+    # Load API key
+    api_key = get_api_key()
+    if not api_key:
+        return jsonify({"error": "Missing API key"}), 500
+    os.environ["GROQ_API_KEY"] = api_key
 
-    os.environ["GROQ_API_KEY"] = get_api_key()
     try:
+        # Initialize the LLM and wrap it with the structured output schema
         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
-        print("✅ LLM Initialized")
+        structured_llm = llm.with_structured_output(autofill_agent_schema)
 
+        # Build the agentic prompt
         prompt = f"""
-You are a smart job application AI assistant. Your task is to help a user fill out a job application form using the user's resume/profile data.
+You are a smart job application AI assistant.
 
-Generate step-by-step actions. Each step must include:
-- `action`: one of `click`, `type`, `select`, or `check`
-- `selector`: a valid CSS selector
-- `value`: only for `type` and `select`
-- Optional: `times`: for how many times to repeat a click action
+Your job is to generate a precise list of actions (click, type, select, check) to fill out this web form,
+using ONLY the form fields listed below and the user's resume data.
 
-🧠 **Rules:**
-- ONLY use fields listed below under "Form Fields".
-- If a field looks irrelevant (like a button named 'Settings'), you can SKIP it.
-- Click “Add” buttons multiple times if needed (`times` attribute).
-- Only fill in fields where accurate data is available from profile.
-- **Do NOT guess** gender, caste, religion, or phone numbers — skip them if missing.
-- Use accurate selectors.
+Return a JSON array of objects with:
+- action: "click" | "type" | "select" | "check"
+- selector: valid CSS selector
+- value: for "type"/"select" only (omit or empty string otherwise)
+- times: integer, how many times to click (default 1)
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
 ### Resume Data:
 {json.dumps(profile_data, indent=2)}
-
-Update Form fields and Return ONLY a JSON array like:
-[
-  {{
-    "action": "click",
-    "selector": "button.add-education",
-    "times": 3
-  }},
-  {{
-    "action": "type",
-    "selector": "input[name='institution']",
-    "value": "IIT Delhi"
-  }}
-]
 """
+        # Invoke the AI and get a pure Python list of dicts
+        plan_steps = structured_llm.invoke(prompt)
 
-        # response = llm.invoke(prompt)
+        # Validate type
+        if not isinstance(plan_steps, list):
+            return jsonify({"error": "LLM returned wrong structure"}), 500
 
-        ai_message = llm.invoke(prompt)
-        text_output = ai_message.content if hasattr(ai_message, 'content') else ai_message
-
-        try:
-            import re
-
-            # Extract the JSON array from the response text
-            match = re.search(r'\[\s*{.*}\s*]', text_output, re.DOTALL)
-            
-            if not match:
-                # Try to fix common JSON mistakes
-                text_output = text_output.replace('\n', '').replace('\r', '')
-                text_output = text_output.split('```')[0]  # remove any ``` markers
-                try:
-                    response_json = json.loads(text_output)
-                except Exception as e:
-                    return jsonify({"error": "Failed to parse LLM output (after cleaning)", "details": str(e), "raw": text_output}), 500
-
-                
-            json_text = match.group(0)
-            response_json = json.loads(json_text)
-
-
-            # response_json = json.loads(text_output)
-        except Exception as e:
-            print("❌ Failed to parse AI response:", text_output)
-            return jsonify({"error": "Failed to parse LLM output", "details": str(e)}), 500
-
-
-
-        # if isinstance(response, str):
-        #     try:
-        #         response = json.loads(response)
-        #     except Exception as e:
-        #         return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
-
-        # return jsonify(response_json)
-        return jsonify({"form_fields_filled": response_json})
-
+        # Return under the expected key
+        return jsonify({"form_fields_filled": plan_steps})
 
     except Exception as e:
+        # Log and return error details
         print(f"❌ AI Processing Failed: {e}")
-        return jsonify({"error": "AI Processing Failed", "details": str(e)}), 500
+        return jsonify({"error": "AI processing failed", "details": str(e)}), 500
 
 
 if __name__ == "__main__":

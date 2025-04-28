@@ -346,6 +346,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // Filter out unnecessary fields
 
                     extractedFields = extractedFields.filter(field =>
+                        (field.id || field.name || field.label) &&
                         field.fieldType !== "hidden" &&
                         field.fieldType !== "submit" && // new
                         field.fieldType !== "button" && field.label.toLowerCase().includes("save") === false &&  // new
