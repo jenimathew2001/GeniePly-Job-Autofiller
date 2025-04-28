@@ -347,22 +347,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     console.log("✅ Extracted Form Fields:", extractedFields);
 
-                    extractedFields = extractedFields.filter(field =>
-                        (field.id || field.name || field.label) &&
-                        field.fieldType !== "hidden" &&
-                        field.fieldType !== "submit" && // new
-                        //field.fieldType !== "button" && field.label.toLowerCase().includes("save") === false &&  // new
-                        field.label.toLowerCase().includes("cookie") === false &&
-                        field.label.toLowerCase().includes("switch") === false &&
-                        field.label.toLowerCase().includes("settings") === false && // new
-                        field.label.toLowerCase().includes("menu") === false &&    // new
-                        field.label.toLowerCase().includes("account") === false && // new
-                        field.label.toLowerCase().includes("language") === false && // new
-                        field.label.toLowerCase().includes("submit") === false &&   // new
-                        field.label.toLowerCase().includes("save") === false &&     // new
-                        field.name?.includes("vendor") === false &&
-                        field.name?.includes("chkbox") === false
-                    );
+                    extractedFields = extractedFields.filter(field => {
+                        const label = field.label?.toLowerCase() || "";
+                        const name = field.name?.toLowerCase() || "";
+                    
+                        return (
+                            (field.id || field.name || field.label) &&  // should have at least one identifier
+                            field.fieldType !== "hidden" &&             // always ignore hidden fields
+                    
+                            !(
+                                label.includes("save") ||
+                                label.includes("cookie") ||
+                                label.includes("switch") ||
+                                label.includes("settings") ||
+                                label.includes("menu") ||
+                                label.includes("account") ||
+                                label.includes("language") ||
+                                label.includes("submit") ||
+                                label.includes("back") ||
+                                name.includes("vendor") ||
+                                name.includes("chkbox")
+                            )
+                        );
+                    });
+                    
+
+                    
                     
     
                     console.log("✅ Filtered Form Fields:", extractedFields);
