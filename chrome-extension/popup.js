@@ -373,8 +373,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // Map raw fields to action format based on type
                     const mappedFields = extractedFields.map(field => {
+                        const fieldType = field.fieldType?.toLowerCase() || "";
                         const actionType = (() => {
-                            const fieldType = field.fieldType?.toLowerCase() || "";
 
                             if (["text", "textarea", "email", "tel", "number", "password", "url"].includes(fieldType)) {
                                 return "type";
