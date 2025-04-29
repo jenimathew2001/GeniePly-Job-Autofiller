@@ -648,7 +648,7 @@ document.addEventListener("DOMContentLoaded", function () {
             formStructure.push({
                 name: field.name || "",
                 id: field.id || "",
-                class:field.class,
+                class:field.className,
                 label: label,
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
                 fieldType: fieldType // checkbox, radio, text, etc.
