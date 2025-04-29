@@ -196,7 +196,7 @@ Your task is to update ONLY the following fields listed under "Form Fields" belo
 
 Each form field must be rewritten following these rules:
 - `action`: one of "click", "type", "select", or "check"
-- `selector`: use a valid CSS selector (preferably field's "id", or "name", or based on "label")
+- `selector`: use a valid CSS selector (preferably field's "id", "name" or class or based on "label")
 - `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
 - `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
 
@@ -247,7 +247,6 @@ Final JSON array must look like:
 ]
 
 ---
-Remember if n number of fields are being given to you I want only those updated n in the response!
 
 🛑 STRICT JSON RULES:
 - No markdown formatting like ```json
@@ -255,6 +254,8 @@ Remember if n number of fields are being given to you I want only those updated 
 - No extra fields that are not listed under Form Fields
 - No guessing if Resume Data does not have the correct information
 
+Remember if n number of fields are being given to you I want only those updated n in the response!
+and
 ONLY return the JSON array as final output.
 """
 
