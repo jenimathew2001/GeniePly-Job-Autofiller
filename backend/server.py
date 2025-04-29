@@ -217,6 +217,7 @@ No extra text, no explanation, no comments outside the array.
 Example 1:
 If a field from Form Fields looks like:
 {{
+    "class":"css-je3x",
     "fieldType": "text",
     "id": "address--city",
     "label": "City or Town",
@@ -232,6 +233,24 @@ You should update it like:
 }}
 
 Example 2:
+If a field from Form Fields looks like:
+{{
+    "class":"css-r6gqv6",
+    "fieldType": "submit",
+    "id": "",
+    "label": "Add",
+    "name": "",
+    "type": "button"
+}}
+
+You should update it like(4 experience to be filled so 4 times click add button):
+{{
+    "action": "click",
+    "selector": "css-r6gqv6",
+    "times":4
+}}
+
+Example 3:
 Final JSON array must look like:
 [
   {{
