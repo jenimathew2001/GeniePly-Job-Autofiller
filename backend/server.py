@@ -196,7 +196,7 @@ Your task is to update ONLY the following fields listed under "Form Fields" belo
 
 Each form field must be rewritten following these rules:
 - `action`: one of "click", "type", "select", or "check"
-- `selector`: use a valid CSS selector (preferably field's "id", "name" or class or based on "label")
+- `selector`: use a valid CSS selector (preferably field's "id", "name" , "class" or based on "label")
 - `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
 - `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
 
