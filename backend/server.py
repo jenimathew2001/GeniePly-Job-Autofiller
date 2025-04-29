@@ -194,9 +194,7 @@ Your task is to update ONLY the following fields listed under "Form Fields" belo
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
-Each form field must be rewritten following these rules:
-- `action`: one of "click", "type", "select", or "check"
-- `selector`: use a valid CSS selector (preferably field's "id", "name" , "class" or based on "label")
+In each form field you must add the following:
 - `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
 - `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
 
@@ -217,36 +215,36 @@ No extra text, no explanation, no comments outside the array.
 Example 1:
 If a field from Form Fields looks like:
 {{
-    "class":"css-je3x",
     "fieldType": "text",
-    "id": "address--city",
     "label": "City or Town",
-    "name": "city",
-    "type": "input"
+    "action": "type",
+    "selector": "#address--city"
 }}
 
 You should update it like:
 {{
+    "fieldType": "text",
+    "label": "City or Town",
     "action": "type",
     "selector": "#address--city",
-    "value": "London"
+    "value":"London"
 }}
 
 Example 2:
 If a field from Form Fields looks like:
 {{
-    "class":"css-r6gqv6",
     "fieldType": "submit",
-    "id": "",
     "label": "Add",
-    "name": "",
-    "type": "button"
+    "action": "click",
+    "selector": ".css-r6gqv6",
 }}
 
 You should update it like(4 experience to be filled so 4 times click add button):
 {{
+    "fieldType": "submit",
+    "label": "Add",
     "action": "click",
-    "selector": "css-r6gqv6",
+    "selector": ".css-r6gqv6",
     "times":4
 }}
 
@@ -254,14 +252,18 @@ Example 3:
 Final JSON array must look like:
 [
   {{
-    "action": "click",
-    "selector": "button.add-education",
-    "times": 3
+    "fieldType": "text",
+    "label": "LinkedIn",
+    "action": "type",
+    "selector": "#socialNetworkAccounts--linkedInAccount",
+    "value":"https://www.linkedin.com/in/jeni-mathew-346253209/"
   }},
   {{
-    "action": "type",
-    "selector": "input[name='institution']",
-    "value": "IIT Delhi"
+    "fieldType": "submit",
+    "label": "Add",
+    "action": "click",
+    "selector": ".css-r6gqv6",
+    "times":4
   }}
 ]
 

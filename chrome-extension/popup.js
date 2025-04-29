@@ -372,7 +372,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
 
                     // Map raw fields to action format based on type
-                    const mappedFields = extractedFields.map(field => {
+                    extractedFields = extractedFields.map(field => {
                         const fieldType = field.fieldType?.toLowerCase() || "";
                         const actionType = (() => {
 
@@ -404,10 +404,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     console.log("✅ Filtered Form Fields:", extractedFields);
 
-                    console.log("✅ Mapped Fields to Agent Actions:", mappedFields);
-                    
-
-    
                     // Fetch user profile data
                     const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
                     const profileData = await profileResponse.json();
@@ -432,24 +428,10 @@ document.addEventListener("DOMContentLoaded", function () {
                             unknownFields.push(field); // Send only unknown fields to AI
                         }
                     });
-
-                    
-
-                    let profileActions = knownFields.map(field => ({
-                        action: "type",
-                        selector: field.id
-                          ? `#${field.id}`
-                          : field.name
-                            ? `[name="${field.name}"]`
-                            : field.label
-                              ? `input[placeholder*="${field.label}"],input[aria-label*="${field.label}"],input[title*="${field.label}"]`
-                              : "",
-                        value: field.value
-                      }));
                       
                       
     
-                    console.log("✅ Directly Matched Fields from Profile:", profileActions);
+                    console.log("✅ Directly Matched Fields from Profile:", knownFields);
                     console.log("❓ Unknown Fields (to send to AI):", unknownFields);
 
 
@@ -474,7 +456,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
     
                     // Merge both known and AI-filled fields
-                    const finalFilledFields = [...profileActions, ...aiFilledData.form_fields_filled];
+                    const finalFilledFields = [...knownFields, ...aiFilledData.form_fields_filled];
 
                     console.log("Final Fields:", finalFilledFields);
     
