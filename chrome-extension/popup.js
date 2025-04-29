@@ -370,12 +370,43 @@ document.addEventListener("DOMContentLoaded", function () {
                             )
                         );
                     });
+
+                    // Map raw fields to action format based on type
+                    const mappedFields = extractedFields.map(field => {
+                        const actionType = (() => {
+                            const fieldType = field.fieldType?.toLowerCase() || "";
+
+                            if (["text", "textarea", "email", "tel", "number", "password", "url"].includes(fieldType)) {
+                                return "type";
+                            } else if (["radio", "checkbox"].includes(fieldType)) {
+                                return "select";
+                            } else if (["submit", "button"].includes(fieldType)) {
+                                return "click";
+                            } else {
+                                return "type"; // default fallback
+                            }
+                        })();
+
+                        // Build the selector
+                        const selector =
+                            field.id ? `#${field.id}` :
+                            field.name ? `[name="${field.name}"]` :
+                            field.class ? `.${field.class.split(" ").join(".")}` :
+                            "";
+
+                        return {
+                            fieldType,
+                            label:field.label,
+                            action: actionType,
+                            selector: selector
+                        };
+                    });
+
+                    console.log("✅ Filtered Form Fields:", extractedFields);
+
+                    console.log("✅ Mapped Fields to Agent Actions:", mappedFields);
                     
 
-                    
-                    
-    
-                    console.log("✅ Filtered Form Fields:", extractedFields);
     
                     // Fetch user profile data
                     const profileResponse = await fetch(`https://genieply.onrender.com/users/${enteredEmail}`);
