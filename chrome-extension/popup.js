@@ -391,6 +391,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         const selector =
                             field.id ? `#${field.id}` :
                             field.name ? `[name="${field.name}"]` :
+                            field.uniqueSelector ? field.uniqueSelector :
                             field.class ? `.${field.class.split(" ").join(".")}` :
                             "";
 
@@ -478,55 +479,163 @@ document.addEventListener("DOMContentLoaded", function () {
      * Extracts matching data from the user profile based on field name or label.
      */
 
-    function executeAgentPlan(planSteps) {
+    // function executeAgentPlan(planSteps) {
+    //     console.log("🤖 Executing AI Agent Plan...");
+    
+    //     planSteps.forEach(step => {
+    //         try {
+    //             const { action, selector, value } = step;
+    //             const element = document.querySelector(selector);
+    
+    //             if (!element) {
+    //                 console.warn(`⚠️ Element not found for selector: ${selector}`);
+    //                 return;
+    //             }
+    
+    //             if (action === "click") {
+    //                 const repeat = step.times || 1;
+    //                 for (let i = 0; i < repeat; i++) {
+    //                     element.click();
+    //                 } 
+    //             }
+    //             else if (action === "type") {
+    //                 element.focus();
+    //                 element.value = value;
+    //                 element.dispatchEvent(new Event("input", { bubbles: true }));
+    //                 element.dispatchEvent(new Event("change", { bubbles: true }));
+    //                 console.log(`⌨️ Typed '${value}' into: ${selector}`);
+    //             } else if (action === "select") {
+                    
+    //                 const option = Array.from(element.options).find(opt => {
+    //                     const val = value.toLowerCase();
+    //                     return opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val);
+    //                 });
+                    
+    //                 if (option) {
+    //                     element.value = option.value;
+    //                     element.dispatchEvent(new Event("change", { bubbles: true }));
+    //                     console.log(`🔽 Selected '${option.value}' in: ${selector}`);
+    //                 }
+    //             } else if (action === "check") {
+    //                 element.checked = true;
+    //                 element.dispatchEvent(new Event("change", { bubbles: true }));
+    //                 console.log(`☑️ Checked: ${selector}`);
+    //             }
+    //         } catch (e) {
+    //             console.error("❌ Error executing step:", step, e);
+    //         }
+    //     });
+    
+    //     console.log("✅ AI Agent Execution Complete");
+    // }
+
+    async function executeAgentPlan(planSteps, profile = {}) {
         console.log("🤖 Executing AI Agent Plan...");
     
-        planSteps.forEach(step => {
+        const filledSelectors = new Set();
+    
+        for (const step of planSteps) {
             try {
                 const { action, selector, value } = step;
                 const element = document.querySelector(selector);
     
                 if (!element) {
                     console.warn(`⚠️ Element not found for selector: ${selector}`);
-                    return;
+                    continue;
                 }
     
                 if (action === "click") {
                     const repeat = step.times || 1;
                     for (let i = 0; i < repeat; i++) {
                         element.click();
-                    } 
+                    }
+                    console.log(`🖱️ Clicked ${repeat}x: ${selector}`);
+    
+                    // Wait briefly for new fields to appear
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
+    
                 else if (action === "type") {
                     element.focus();
                     element.value = value;
                     element.dispatchEvent(new Event("input", { bubbles: true }));
                     element.dispatchEvent(new Event("change", { bubbles: true }));
                     console.log(`⌨️ Typed '${value}' into: ${selector}`);
-                } else if (action === "select") {
-                    
+                }
+    
+                else if (action === "select") {
                     const option = Array.from(element.options).find(opt => {
                         const val = value.toLowerCase();
                         return opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val);
                     });
-                    
+    
                     if (option) {
                         element.value = option.value;
                         element.dispatchEvent(new Event("change", { bubbles: true }));
                         console.log(`🔽 Selected '${option.value}' in: ${selector}`);
+    
+                        // Wait for form to expand
+                        await new Promise(resolve => setTimeout(resolve, 500));
                     }
-                } else if (action === "check") {
+                }
+    
+                else if (action === "check") {
                     element.checked = true;
                     element.dispatchEvent(new Event("change", { bubbles: true }));
                     console.log(`☑️ Checked: ${selector}`);
                 }
+    
+                // Track filled fields
+                filledSelectors.add(selector);
+    
             } catch (e) {
                 console.error("❌ Error executing step:", step, e);
             }
-        });
+        }
+    
+        // 🔁 Check for new fields that might have appeared after click/select
+        if (typeof extractFormFieldsDirectly === "function") {
+            const newFields = extractFormFieldsDirectly();
+    
+            const newUnfilled = newFields.filter(f => {
+                const sel = f.id ? `#${f.id}` :
+                            f.name ? `[name="${f.name}"]` :
+                            f.class ? `.${f.class.split(" ").join(".")}` :
+                            f.uniqueSelector || "";
+    
+                return sel && !filledSelectors.has(sel);
+            });
+    
+            if (newUnfilled.length > 0) {
+                console.log("🔄 New fields detected after interaction:", newUnfilled);
+    
+                // Match directly from profile if possible
+                const extraActions = newUnfilled.map(f => {
+                    const val = getProfileValue(f, profile); // You should already have this helper
+                    const sel = f.id ? `#${f.id}` :
+                                f.name ? `[name="${f.name}"]` :
+                                f.class ? `.${f.class.split(" ").join(".")}` :
+                                f.uniqueSelector || "";
+    
+                    return {
+                        action: f.fieldType === "checkbox" || f.fieldType === "radio" ? "check" : "type",
+                        selector: sel,
+                        value: val || ""
+                    };
+                }).filter(act => act.value !== "");
+    
+                console.log("⚡ Filling new fields dynamically:", extraActions);
+    
+                // Recursively call to fill the rest
+                if (extraActions.length > 0) {
+                    await executeAgentPlan(extraActions, profile);
+                }
+            }
+        }
     
         console.log("✅ AI Agent Execution Complete");
     }
+    
     
     
 
@@ -657,6 +766,16 @@ document.addEventListener("DOMContentLoaded", function () {
     
             // Push all types including radio & button
             const fieldType = field.type?.toLowerCase() || field.tagName.toLowerCase();
+
+            // Inside formStructure.push({...}), add:
+            let section = field.closest('[role="group"][aria-labelledby]');
+            let sectionLabel = section ? section.getAttribute("aria-labelledby") : "";
+
+            let uniqueSelector = "";
+            if (sectionLabel && field.tagName.toLowerCase() === "button" && label.toLowerCase() === "add") {
+                uniqueSelector = `[aria-labelledby="${sectionLabel}"] button`;
+            }
+
     
             formStructure.push({
                 name: field.name || "",
@@ -664,8 +783,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 class:field.className,
                 label: label,
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
-                fieldType: fieldType // checkbox, radio, text, etc.
+                fieldType: fieldType, // checkbox, radio, text, etc.
+                uniqueSelector: uniqueSelector || ""
             });
+
+            
         });
     
         console.log("📌 Extracted Form Structure:", formStructure);
