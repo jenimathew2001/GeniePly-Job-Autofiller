@@ -529,14 +529,14 @@ document.addEventListener("DOMContentLoaded", function () {
     //     console.log("✅ AI Agent Execution Complete");
     // }
 
-    async function executeAgentPlan(planSteps, profile = {}) {
+    async function executeAgentPlan(planSteps) {
         console.log("🤖 Executing AI Agent Plan...");
     
-        const filledSelectors = new Set();
+        const filledSelectors = new Set(); // Track what we’ve already filled to avoid duplication
     
         for (const step of planSteps) {
             try {
-                const { action, selector, value } = step;
+                const { action, selector, value, times } = step;
                 const element = document.querySelector(selector);
     
                 if (!element) {
@@ -544,15 +544,44 @@ document.addEventListener("DOMContentLoaded", function () {
                     continue;
                 }
     
+                // Prevent double filling
+                if (filledSelectors.has(selector)) continue;
+                filledSelectors.add(selector);
+    
                 if (action === "click") {
-                    const repeat = step.times || 1;
+                    const repeat = times || 1;
                     for (let i = 0; i < repeat; i++) {
                         element.click();
+                        await new Promise(resolve => setTimeout(resolve, 500)); // Wait for DOM update
                     }
-                    console.log(`🖱️ Clicked ${repeat}x: ${selector}`);
     
-                    // Wait briefly for new fields to appear
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    // 🆕 Detect and autofill newly added fields
+                    const allFields = extractFormFieldsDirectly();
+    
+                    const newFields = allFields.filter(field =>
+                        (field.id || field.name) &&
+                        !planSteps.some(existing =>
+                            existing.selector?.includes(field.name) || existing.selector?.includes(field.id)
+                        )
+                    );
+    
+                    if (newFields.length > 0 && window.__PROFILE_DATA__) {
+                        console.log("🆕 Detected new fields after click:", newFields);
+    
+                        const response = await fetch("https://genieply.onrender.com/ai-autofill", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                form_fields: newFields,
+                                profile_data: window.__PROFILE_DATA__
+                            })
+                        });
+    
+                        const aiResult = await response.json();
+                        if (aiResult.form_fields_filled && Array.isArray(aiResult.form_fields_filled)) {
+                            await executeAgentPlan(aiResult.form_fields_filled); // Recursively handle new fields
+                        }
+                    }
                 }
     
                 else if (action === "type") {
@@ -564,18 +593,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
     
                 else if (action === "select") {
-                    const option = Array.from(element.options).find(opt => {
-                        const val = value.toLowerCase();
-                        return opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val);
-                    });
-    
+                    const val = value.toLowerCase();
+                    const option = Array.from(element.options).find(opt =>
+                        opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val)
+                    );
                     if (option) {
                         element.value = option.value;
                         element.dispatchEvent(new Event("change", { bubbles: true }));
                         console.log(`🔽 Selected '${option.value}' in: ${selector}`);
-    
-                        // Wait for form to expand
-                        await new Promise(resolve => setTimeout(resolve, 500));
                     }
                 }
     
@@ -585,56 +610,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log(`☑️ Checked: ${selector}`);
                 }
     
-                // Track filled fields
-                filledSelectors.add(selector);
-    
-            } catch (e) {
-                console.error("❌ Error executing step:", step, e);
-            }
-        }
-    
-        // 🔁 Check for new fields that might have appeared after click/select
-        if (typeof extractFormFieldsDirectly === "function") {
-            const newFields = extractFormFieldsDirectly();
-    
-            const newUnfilled = newFields.filter(f => {
-                const sel = f.id ? `#${f.id}` :
-                            f.name ? `[name="${f.name}"]` :
-                            f.class ? `.${f.class.split(" ").join(".")}` :
-                            f.uniqueSelector || "";
-    
-                return sel && !filledSelectors.has(sel);
-            });
-    
-            if (newUnfilled.length > 0) {
-                console.log("🔄 New fields detected after interaction:", newUnfilled);
-    
-                // Match directly from profile if possible
-                const extraActions = newUnfilled.map(f => {
-                    const val = getProfileValue(f, profile); // You should already have this helper
-                    const sel = f.id ? `#${f.id}` :
-                                f.name ? `[name="${f.name}"]` :
-                                f.class ? `.${f.class.split(" ").join(".")}` :
-                                f.uniqueSelector || "";
-    
-                    return {
-                        action: f.fieldType === "checkbox" || f.fieldType === "radio" ? "check" : "type",
-                        selector: sel,
-                        value: val || ""
-                    };
-                }).filter(act => act.value !== "");
-    
-                console.log("⚡ Filling new fields dynamically:", extraActions);
-    
-                // Recursively call to fill the rest
-                if (extraActions.length > 0) {
-                    await executeAgentPlan(extraActions, profile);
-                }
+            } catch (err) {
+                console.error("❌ Error executing step:", step, err);
             }
         }
     
         console.log("✅ AI Agent Execution Complete");
     }
+    
+
     
     
     
