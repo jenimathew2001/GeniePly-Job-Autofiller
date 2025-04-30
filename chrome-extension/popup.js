@@ -564,6 +564,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             existing.selector?.includes(field.name) || existing.selector?.includes(field.id)
                         )
                     );
+
+                    console.log("🆕 Detected new fields after click:", newFields);
     
                     if (newFields.length > 0 && window.__PROFILE_DATA__) {
                         console.log("🆕 Detected new fields after click:", newFields);
