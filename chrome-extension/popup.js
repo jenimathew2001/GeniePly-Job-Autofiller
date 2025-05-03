@@ -558,19 +558,24 @@ document.addEventListener("DOMContentLoaded", function () {
                         await new Promise(resolve => setTimeout(resolve, 500));
                     }
                 }
-    
+
                 else if (action === "type") {
-                    
                     element.focus();
-
-                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-                    nativeInputValueSetter.call(element, value);
-
+                
+                    // Use the correct native value setter depending on the element type
+                    const prototype = Object.getPrototypeOf(element);
+                    const descriptor = Object.getOwnPropertyDescriptor(prototype, "value");
+                
+                    if (descriptor && descriptor.set) {
+                        descriptor.set.call(element, value);
+                    } else {
+                        element.value = value; // Fallback
+                    }
+                
                     element.dispatchEvent(new Event('input', { bubbles: true }));
                     element.dispatchEvent(new Event('change', { bubbles: true }));
-
+                
                     console.log(`⌨️ Typed '${value}' into: ${selector}`);
-
                 }
     
                 else if (action === "select") {
