@@ -529,10 +529,13 @@ document.addEventListener("DOMContentLoaded", function () {
     //     console.log("✅ AI Agent Execution Complete");
     // }
 
-    async function executeAgentPlan(planSteps) {
+    async function executeAgentPlan(planSteps, filledSelectors = new Set(), baselineFormFields = null) {
         console.log("🤖 Executing AI Agent Plan...");
     
-        const filledSelectors = new Set(); // Track what we’ve already filled to avoid duplication
+        // If this is the first call, extract the baseline form structure
+        if (!baselineFormFields) {
+            baselineFormFields = extractFormFieldsDirectly();
+        }
     
         for (const step of planSteps) {
             try {
@@ -552,37 +555,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const repeat = times || 1;
                     for (let i = 0; i < repeat; i++) {
                         element.click();
-                        await new Promise(resolve => setTimeout(resolve, 500)); // Wait for DOM update
-                    }
-    
-                    // 🆕 Detect and autofill newly added fields
-                    const allFields = extractFormFieldsDirectly();
-    
-                    const newFields = allFields.filter(field =>
-                        (field.id || field.name) &&
-                        !planSteps.some(existing =>
-                            existing.selector?.includes(field.name) || existing.selector?.includes(field.id)
-                        )
-                    );
-
-                    console.log("🆕 Detected new fields after click:", newFields);
-    
-                    if (newFields.length > 0 && window.__PROFILE_DATA__) {
-                        console.log("🆕 Detected new fields after click:", newFields);
-    
-                        const response = await fetch("https://genieply.onrender.com/ai-autofill", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                form_fields: newFields,
-                                profile_data: window.__PROFILE_DATA__
-                            })
-                        });
-    
-                        const aiResult = await response.json();
-                        if (aiResult.form_fields_filled && Array.isArray(aiResult.form_fields_filled)) {
-                            await executeAgentPlan(aiResult.form_fields_filled); // Recursively handle new fields
-                        }
+                        await new Promise(resolve => setTimeout(resolve, 500));
                     }
                 }
     
@@ -612,6 +585,46 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log(`☑️ Checked: ${selector}`);
                 }
     
+                // 🧠 After each action, check if new fields appeared
+                await new Promise(resolve => setTimeout(resolve, 300));
+                const currentFormFields = extractFormFieldsDirectly();
+    
+                const baselineKeys = new Set(baselineFormFields.map(f =>
+                    `${f.id || f.name || f.label}`
+                ));
+                const newFields = currentFormFields.filter(f =>
+                    !baselineKeys.has(f.id || f.name || f.label)
+                );
+    
+                if (newFields.length > 0) {
+                    console.log("🆕 New fields detected after interaction:", newFields);
+    
+                    // Combine new fields with previous fields to form full structure
+                    const fullFormStructure = [...baselineFormFields, ...newFields];
+    
+                    const response = await fetch("https://genieply.onrender.com/ai-autofill", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            form_fields: fullFormStructure,
+                            profile_data: profileData
+                        })
+                    });
+    
+                    const data = await response.json();
+                    if (data.form_fields_filled && Array.isArray(data.form_fields_filled)) {
+                        const newSteps = data.form_fields_filled.filter(step =>
+                            !filledSelectors.has(step.selector)
+                        );
+                        console.log("🔄 Executing new AI-generated steps:", newSteps);
+                        await executeAgentPlan(newSteps, filledSelectors, fullFormStructure);
+                    } else {
+                        console.warn("⚠️ No form_fields_filled returned in updated step response.");
+                    }
+    
+                    return; // Prevent double execution
+                }
+    
             } catch (err) {
                 console.error("❌ Error executing step:", step, err);
             }
@@ -619,6 +632,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
         console.log("✅ AI Agent Execution Complete");
     }
+    
     
 
     
@@ -779,9 +793,6 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("📌 Extracted Form Structure:", formStructure);
         return formStructure;
     }
-    
-    
-    
     
     
 
