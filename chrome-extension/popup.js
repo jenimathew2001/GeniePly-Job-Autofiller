@@ -466,7 +466,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         {
                             target: { tabId: tabs[0].id },
                             function: executeAgentPlan,
-                            args: [finalFilledFields]
+                            args: [finalFilledFields, [], null, profileData.cv_json] // Send profileData & pass Set as array
                         },
                         () => console.log("✅ Form Autofilled")
                     );
@@ -529,7 +529,10 @@ document.addEventListener("DOMContentLoaded", function () {
     //     console.log("✅ AI Agent Execution Complete");
     // }
 
-    async function executeAgentPlan(planSteps, filledSelectors = new Set(), baselineFormFields = null) {
+    
+    async function executeAgentPlan(planSteps, filledSelectorsRaw = [], baselineFormFields = null, profileData) {
+        const filledSelectors = new Set(filledSelectorsRaw);
+        
         console.log("🤖 Executing AI Agent Plan...");
     
         // If this is the first call, extract the baseline form structure
@@ -600,12 +603,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 await new Promise(resolve => setTimeout(resolve, 300));
                 const currentFormFields = extractFormFieldsDirectly();
     
-                const baselineKeys = new Set(baselineFormFields.map(f =>
-                    `${f.id || f.name || f.label}`
-                ));
-                const newFields = currentFormFields.filter(f =>
-                    !baselineKeys.has(f.id || f.name || f.label)
-                );
+                // const baselineKeys = new Set(baselineFormFields.map(f =>
+                //     `${f.id || f.name || f.label}`
+                // ));
+                // const newFields = currentFormFields.filter(f =>
+                //     !baselineKeys.has(f.id || f.name || f.label)
+                // );
+
+                const baselineKeys = new Set(baselineFormFields.map(f => f.key));
+                const newFields = currentFormFields.filter(f => f.key && !baselineKeys.has(f.key));
+
     
                 if (newFields.length > 0) {
                     console.log("🆕 New fields detected after interaction:", newFields);
@@ -787,6 +794,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 uniqueSelector = `[aria-labelledby="${sectionLabel}"] button`;
             }
 
+            const key = (field.id || field.name || label || field.className || field.placeholder || field.type).toLowerCase().trim();
+
     
             formStructure.push({
                 name: field.name || "",
@@ -795,7 +804,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 label: label,
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
                 fieldType: fieldType, // checkbox, radio, text, etc.
-                uniqueSelector: uniqueSelector || ""
+                uniqueSelector: uniqueSelector || "",
+                key
             });
 
             
