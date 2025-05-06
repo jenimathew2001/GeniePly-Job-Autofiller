@@ -479,177 +479,177 @@ document.addEventListener("DOMContentLoaded", function () {
      * Extracts matching data from the user profile based on field name or label.
      */
 
-    function executeAgentPlan(planSteps) {
-        console.log("🤖 Executing AI Agent Plan...");
-    
-        planSteps.forEach(step => {
-            try {
-                const { action, selector, value } = step;
-                const element = document.querySelector(selector);
-    
-                if (!element) {
-                    console.warn(`⚠️ Element not found for selector: ${selector}`);
-                    return;
-                }
-    
-                if (action === "click") {
-                    const repeat = step.times || 1;
-                    for (let i = 0; i < repeat; i++) {
-                        element.click();
-                    } 
-                }
-                else if (action === "type") {
-                    element.focus();
-                    element.value = value;
-                    element.dispatchEvent(new Event("input", { bubbles: true }));
-                    element.dispatchEvent(new Event("change", { bubbles: true }));
-                    console.log(`⌨️ Typed '${value}' into: ${selector}`);
-                } else if (action === "select") {
-                    
-                    const option = Array.from(element.options).find(opt => {
-                        const val = value.toLowerCase();
-                        return opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val);
-                    });
-                    
-                    if (option) {
-                        element.value = option.value;
-                        element.dispatchEvent(new Event("change", { bubbles: true }));
-                        console.log(`🔽 Selected '${option.value}' in: ${selector}`);
-                    }
-                } else if (action === "check") {
-                    element.checked = true;
-                    element.dispatchEvent(new Event("change", { bubbles: true }));
-                    console.log(`☑️ Checked: ${selector}`);
-                }
-            } catch (e) {
-                console.error("❌ Error executing step:", step, e);
-            }
-        });
-    
-        console.log("✅ AI Agent Execution Complete");
-    }
-
-    
-    // async function executeAgentPlan(planSteps, filledSelectorsRaw = [], baselineFormFields = null, profileData) {
-    //     const filledSelectors = new Set(filledSelectorsRaw);
-        
+    // function executeAgentPlan(planSteps) {
     //     console.log("🤖 Executing AI Agent Plan...");
     
-    //     // If this is the first call, extract the baseline form structure
-    //     if (!baselineFormFields) {
-    //         baselineFormFields = extractFormFieldsDirectly();
-    //     }
-    
-    //     for (const step of planSteps) {
+    //     planSteps.forEach(step => {
     //         try {
-    //             const { action, selector, value, times } = step;
+    //             const { action, selector, value } = step;
     //             const element = document.querySelector(selector);
     
     //             if (!element) {
     //                 console.warn(`⚠️ Element not found for selector: ${selector}`);
-    //                 continue;
+    //                 return;
     //             }
-    
-    //             // Prevent double filling
-    //             if (filledSelectors.has(selector)) continue;
-    //             filledSelectors.add(selector);
     
     //             if (action === "click") {
-    //                 const repeat = times || 1;
+    //                 const repeat = step.times || 1;
     //                 for (let i = 0; i < repeat; i++) {
     //                     element.click();
-    //                     await new Promise(resolve => setTimeout(resolve, 500));
-    //                 }
+    //                 } 
     //             }
-
     //             else if (action === "type") {
     //                 element.focus();
-                
-    //                 // Use the correct native value setter depending on the element type
-    //                 const prototype = Object.getPrototypeOf(element);
-    //                 const descriptor = Object.getOwnPropertyDescriptor(prototype, "value");
-                
-    //                 if (descriptor && descriptor.set) {
-    //                     descriptor.set.call(element, value);
-    //                 } else {
-    //                     element.value = value; // Fallback
-    //                 }
-                
-    //                 element.dispatchEvent(new Event('input', { bubbles: true }));
-    //                 element.dispatchEvent(new Event('change', { bubbles: true }));
-                
+    //                 element.value = value;
+    //                 element.dispatchEvent(new Event("input", { bubbles: true }));
+    //                 element.dispatchEvent(new Event("change", { bubbles: true }));
     //                 console.log(`⌨️ Typed '${value}' into: ${selector}`);
-    //             }
-    
-    //             else if (action === "select") {
-    //                 const val = value.toLowerCase();
-    //                 const option = Array.from(element.options).find(opt =>
-    //                     opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val)
-    //                 );
+    //             } else if (action === "select") {
+                    
+    //                 const option = Array.from(element.options).find(opt => {
+    //                     const val = value.toLowerCase();
+    //                     return opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val);
+    //                 });
+                    
     //                 if (option) {
     //                     element.value = option.value;
     //                     element.dispatchEvent(new Event("change", { bubbles: true }));
     //                     console.log(`🔽 Selected '${option.value}' in: ${selector}`);
     //                 }
-    //             }
-    
-    //             else if (action === "check") {
+    //             } else if (action === "check") {
     //                 element.checked = true;
     //                 element.dispatchEvent(new Event("change", { bubbles: true }));
     //                 console.log(`☑️ Checked: ${selector}`);
     //             }
-    
-    //             // 🧠 After each action, check if new fields appeared
-    //             await new Promise(resolve => setTimeout(resolve, 300));
-    //             const currentFormFields = extractFormFieldsDirectly();
-    
-    //             // const baselineKeys = new Set(baselineFormFields.map(f =>
-    //             //     `${f.id || f.name || f.label}`
-    //             // ));
-    //             // const newFields = currentFormFields.filter(f =>
-    //             //     !baselineKeys.has(f.id || f.name || f.label)
-    //             // );
-
-    //             const baselineKeys = new Set(baselineFormFields.map(f => f.key));
-    //             const newFields = currentFormFields.filter(f => f.key && !baselineKeys.has(f.key));
-
-    
-    //             if (newFields.length > 0) {
-    //                 console.log("🆕 New fields detected after interaction:", newFields);
-    
-    //                 // Combine new fields with previous fields to form full structure
-    //                 const fullFormStructure = [...baselineFormFields, ...newFields];
-    
-    //                 const response = await fetch("https://genieply.onrender.com/ai-autofill", {
-    //                     method: "POST",
-    //                     headers: { "Content-Type": "application/json" },
-    //                     body: JSON.stringify({
-    //                         form_fields: fullFormStructure,
-    //                         profile_data: profileData
-    //                     })
-    //                 });
-    
-    //                 const data = await response.json();
-    //                 if (data.form_fields_filled && Array.isArray(data.form_fields_filled)) {
-    //                     const newSteps = data.form_fields_filled.filter(step =>
-    //                         !filledSelectors.has(step.selector)
-    //                     );
-    //                     console.log("🔄 Executing new AI-generated steps:", newSteps);
-    //                     await executeAgentPlan(newSteps, filledSelectors, fullFormStructure);
-    //                 } else {
-    //                     console.warn("⚠️ No form_fields_filled returned in updated step response.");
-    //                 }
-    
-    //                 return; // Prevent double execution
-    //             }
-    
-    //         } catch (err) {
-    //             console.error("❌ Error executing step:", step, err);
+    //         } catch (e) {
+    //             console.error("❌ Error executing step:", step, e);
     //         }
-    //     }
+    //     });
     
     //     console.log("✅ AI Agent Execution Complete");
     // }
+
+    
+    function executeAgentPlan(planSteps, filledSelectorsRaw = [], baselineFormFields = null, profileData) {
+        const filledSelectors = new Set(filledSelectorsRaw);
+        
+        console.log("🤖 Executing AI Agent Plan...");
+    
+        // If this is the first call, extract the baseline form structure
+        if (!baselineFormFields) {
+            baselineFormFields = extractFormFieldsDirectly();
+        }
+    
+        for (const step of planSteps) {
+            try {
+                const { action, selector, value, times } = step;
+                const element = document.querySelector(selector);
+    
+                if (!element) {
+                    console.warn(`⚠️ Element not found for selector: ${selector}`);
+                    continue;
+                }
+    
+                // Prevent double filling
+                if (filledSelectors.has(selector)) continue;
+                filledSelectors.add(selector);
+    
+                if (action === "click") {
+                    const repeat = times || 1;
+                    for (let i = 0; i < repeat; i++) {
+                        element.click();
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+
+                else if (action === "type") {
+                    element.focus();
+                
+                    // Use the correct native value setter depending on the element type
+                    const prototype = Object.getPrototypeOf(element);
+                    const descriptor = Object.getOwnPropertyDescriptor(prototype, "value");
+                
+                    if (descriptor && descriptor.set) {
+                        descriptor.set.call(element, value);
+                    } else {
+                        element.value = value; // Fallback
+                    }
+                
+                    element.dispatchEvent(new Event('input', { bubbles: true }));
+                    element.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                    console.log(`⌨️ Typed '${value}' into: ${selector}`);
+                }
+    
+                else if (action === "select") {
+                    const val = value.toLowerCase();
+                    const option = Array.from(element.options).find(opt =>
+                        opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val)
+                    );
+                    if (option) {
+                        element.value = option.value;
+                        element.dispatchEvent(new Event("change", { bubbles: true }));
+                        console.log(`🔽 Selected '${option.value}' in: ${selector}`);
+                    }
+                }
+    
+                else if (action === "check") {
+                    element.checked = true;
+                    element.dispatchEvent(new Event("change", { bubbles: true }));
+                    console.log(`☑️ Checked: ${selector}`);
+                }
+    
+                // // 🧠 After each action, check if new fields appeared
+                // await new Promise(resolve => setTimeout(resolve, 300));
+                // const currentFormFields = extractFormFieldsDirectly();
+    
+                // // const baselineKeys = new Set(baselineFormFields.map(f =>
+                // //     `${f.id || f.name || f.label}`
+                // // ));
+                // // const newFields = currentFormFields.filter(f =>
+                // //     !baselineKeys.has(f.id || f.name || f.label)
+                // // );
+
+                // const baselineKeys = new Set(baselineFormFields.map(f => f.key));
+                // const newFields = currentFormFields.filter(f => f.key && !baselineKeys.has(f.key));
+
+    
+                // if (newFields.length > 0) {
+                //     console.log("🆕 New fields detected after interaction:", newFields);
+    
+                //     // Combine new fields with previous fields to form full structure
+                //     const fullFormStructure = [...baselineFormFields, ...newFields];
+    
+                //     const response = await fetch("https://genieply.onrender.com/ai-autofill", {
+                //         method: "POST",
+                //         headers: { "Content-Type": "application/json" },
+                //         body: JSON.stringify({
+                //             form_fields: fullFormStructure,
+                //             profile_data: profileData
+                //         })
+                //     });
+    
+                //     const data = await response.json();
+                //     if (data.form_fields_filled && Array.isArray(data.form_fields_filled)) {
+                //         const newSteps = data.form_fields_filled.filter(step =>
+                //             !filledSelectors.has(step.selector)
+                //         );
+                //         console.log("🔄 Executing new AI-generated steps:", newSteps);
+                //         await executeAgentPlan(newSteps, filledSelectors, fullFormStructure);
+                //     } else {
+                //         console.warn("⚠️ No form_fields_filled returned in updated step response.");
+                //     }
+    
+                //     return; // Prevent double execution
+                // }
+    
+            } catch (err) {
+                console.error("❌ Error executing step:", step, err);
+            }
+        }
+    
+        console.log("✅ AI Agent Execution Complete");
+    }
     
     
 
