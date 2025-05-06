@@ -558,7 +558,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const repeat = times || 1;
                     for (let i = 0; i < repeat; i++) {
                         element.click();
-                        await new Promise(resolve => setTimeout(resolve, 500));
+                        // await new Promise(resolve => setTimeout(resolve, 500));
                     }
                 }
 
