@@ -530,15 +530,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // }
 
     
-    function executeAgentPlan(planSteps, filledSelectorsRaw = [], baselineFormFields = null, profileData) {
-        const filledSelectors = new Set(filledSelectorsRaw);
+    function executeAgentPlan(planSteps) {
         
         console.log("🤖 Executing AI Agent Plan...");
-    
-        // If this is the first call, extract the baseline form structure
-        if (!baselineFormFields) {
-            baselineFormFields = extractFormFieldsDirectly();
-        }
     
         for (const step of planSteps) {
             try {
@@ -549,10 +543,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.warn(`⚠️ Element not found for selector: ${selector}`);
                     continue;
                 }
-    
-                // Prevent double filling
-                if (filledSelectors.has(selector)) continue;
-                filledSelectors.add(selector);
     
                 if (action === "click") {
                     const repeat = times || 1;
