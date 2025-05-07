@@ -531,7 +531,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 extractedFields = extractedFields.filter(field => {
                     const label = field.label?.toLowerCase() || "";
                     const name = field.name?.toLowerCase() || "";
-                    const id = field.id?.toLowerCase() || "";
+                    const idlower = field.id?.toLowerCase() || "";
     
                     return (
                         (field.id || field.name || field.label) &&
@@ -553,10 +553,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("log out") ||
                             label.includes("english") ||
                             label.includes("candidate home") ||
-                            id.include("accountsettingsbutton") ||
-                            id.include("languageselectorbutton") ||
-                            id.include("settingsselectorbutton") ||
-
+                            idlower.include("accountsettingsbutton") ||
+                            idlower.include("languageselectorbutton") ||
+                            idlower.include("settingsselectorbutton") ||
                             name.includes("vendor") ||
                             name.includes("chkbox")
                         )
