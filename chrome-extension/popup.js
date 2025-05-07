@@ -545,12 +545,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("language") ||
                             label.includes("submit") ||
                             label.includes("back") ||
-                            label.includes("Careers Page") ||
+                            label.includes("careers Page") ||
                             label.includes("search") ||
                             label.includes("alert") ||
                             label.includes("sign") ||
                             label.includes("log out") ||
-                            label.includes("Candidate Home") ||
+                            label.includes("candidate Home") ||
                             name.includes("vendor") ||
                             name.includes("chkbox")
                         )
