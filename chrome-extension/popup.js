@@ -545,6 +545,10 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("language") ||
                             label.includes("submit") ||
                             label.includes("back") ||
+                            label.includes("Careers Page") ||
+                            label.includes("search") ||
+                            label.includes("alert") ||
+                            label.includes("Candidate Home") ||
                             name.includes("vendor") ||
                             name.includes("chkbox")
                         )
