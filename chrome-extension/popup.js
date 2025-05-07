@@ -548,6 +548,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("Careers Page") ||
                             label.includes("search") ||
                             label.includes("alert") ||
+                            label.includes("sign") ||
+                            label.includes("log out") ||
                             label.includes("Candidate Home") ||
                             name.includes("vendor") ||
                             name.includes("chkbox")
