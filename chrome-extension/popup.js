@@ -488,6 +488,8 @@ document.addEventListener("DOMContentLoaded", function () {
     //     });
     // });
 
+    const SectionListener = {}
+
 
 
     document.getElementById("autofill-button").addEventListener("click", function () {
@@ -501,6 +503,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
             const tabId = tabs[0].id;
             const filledSelectors = new Set();
+            const sectionInfo = {}
             let loopCounter = 0;
             const maxLoops = 5;
     
@@ -588,6 +591,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log("✅ No new fields to fill. Exiting loop.");
                     break;
                 }
+                
     
                 console.log("🆕 New fields this round:", newFields);
     
@@ -632,6 +636,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     function: executeAgentPlan,
                     args: [finalFields]  // 🚨 YOU NEED TO MAKE executeAgentPlan RETURN list of filled selectors
                 });
+
+                console.log('Sections',SectionListener)
     
                 const newlyFilled = results?.[0]?.result || [];
     
@@ -707,6 +713,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // }
 
     
+
     function executeAgentPlan(planSteps) {
         
         console.log("🤖 Executing AI Agent Plan...");
@@ -715,8 +722,9 @@ document.addEventListener("DOMContentLoaded", function () {
     
         for (const step of planSteps) {
             try {
-                const { action, selector, value, times } = step;
+                const { action,label, selector, value, times } = step;
                 const element = document.querySelector(selector);
+                
     
                 if (!element) {
                     console.warn(`⚠️ Element not found for selector: ${selector}`);
@@ -764,11 +772,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 else if (action === "click") {
                     const repeat = times || 1;
+                    //pass label or element return section
+                    // includenumber of times clicked , so section : times put in SectionListener 
                     for (let i = 0; i < repeat; i++) {
                         element.click();
-                        // await new Promise(resolve => setTimeout(resolve, 500));
                     }
                     filledFields.add(selector);
+                    SectionListener[label] = repeat
                 }
                 console.log('filledFields',filledFields)
     
