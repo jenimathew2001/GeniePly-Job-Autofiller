@@ -619,6 +619,11 @@ document.addEventListener("DOMContentLoaded", function () {
             let section = field.closest('[role="group"][aria-labelledby]');
             let sectionLabel = section ? section.getAttribute("aria-labelledby") : "";
 
+            // Now, let's go one level higher to get the parent section
+            let higherLevelSection = section ? section.closest('[role="group"][aria-labelledby]') : null;
+            let higherLevelSectionLabel = higherLevelSection ? higherLevelSection.getAttribute("aria-labelledby") : "";
+        
+
             let uniqueSelector = "";
             if (sectionLabel && field.tagName.toLowerCase() === "button" && label.toLowerCase() === "add") {
                 uniqueSelector = `[aria-labelledby="${sectionLabel}"] button`;
@@ -635,10 +640,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
                 fieldType: fieldType, // checkbox, radio, text, etc.
                 uniqueSelector: uniqueSelector || "",
-                section,
-                sectionLabel
-
-                
+                sectionLabel: sectionLabel,
+                higherLevelSectionLabel: higherLevelSectionLabel
             });
 
             
