@@ -647,6 +647,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     args: [finalFields]  // 🚨 YOU NEED TO MAKE executeAgentPlan RETURN list of filled selectors
                 });
 
+                console.log('resultss',results)
+
                 console.log('Sections',SectionListener)
     
                 const newlyFilled = results?.[0]?.reult || [];
