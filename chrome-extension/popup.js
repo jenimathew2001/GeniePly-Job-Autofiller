@@ -553,9 +553,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("log out") ||
                             label.includes("english") ||
                             label.includes("candidate home") ||
-                            idlower.include("accountsettingsbutton") ||
-                            idlower.include("languageselectorbutton") ||
-                            idlower.include("settingsselectorbutton") ||
                             name.includes("vendor") ||
                             name.includes("chkbox")
                         )
