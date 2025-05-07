@@ -622,7 +622,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 uniqueSelector = `[aria-labelledby="${sectionLabel}"] button`;
             }
 
-            const key = (field.id || field.name || label || field.className || field.placeholder || field.type).toLowerCase().trim();
+            // const key = (field.id || field.name || label || field.className || field.placeholder || field.type).toLowerCase().trim();
 
     
             formStructure.push({
@@ -633,7 +633,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
                 fieldType: fieldType, // checkbox, radio, text, etc.
                 uniqueSelector: uniqueSelector || "",
-                key
+                section,
+                sectionLabel
+
+                
             });
 
             
