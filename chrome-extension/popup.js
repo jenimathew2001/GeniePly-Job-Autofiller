@@ -635,6 +635,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log("⚠️ No values available to autofill. Skipping this round.");
                     break;
                 }
+
+                console.log("🆕 Final fields this round:", finalFields );
     
                 // 7. Autofill
                 const results = await chrome.scripting.executeScript({
@@ -645,7 +647,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.log('Sections',SectionListener)
     
-                const newlyFilled = results?.[0]?.result || [];
+                const newlyFilled = results?.[0]?.reult || [];
     
                 if (newlyFilled.length === 0) {
                     console.log("🛑 No new fields filled by script. Ending loop.");
