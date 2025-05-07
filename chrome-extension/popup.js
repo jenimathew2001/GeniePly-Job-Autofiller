@@ -535,8 +535,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     return (
                         (field.id || field.name || field.label) &&
                         field.fieldType !== "hidden" &&
+                        label.trim() !== "" && 
                         !(
                             label.includes("save") ||
+                            label.includes("delete") ||
                             label.includes("cookie") ||
                             label.includes("switch") ||
                             label.includes("settings") ||
@@ -921,7 +923,7 @@ document.addEventListener("DOMContentLoaded", function () {
             let sectionLabel = section ? section.getAttribute("aria-labelledby") : "";
 
             let uniqueSelector = "";
-            if (sectionLabel && field.tagName.toLowerCase() === "button" && label.toLowerCase() === "add") {
+            if (sectionLabel && field.tagName.toLowerCase() === "button" && label.toLowerCase().includes("add")) {
                 uniqueSelector = `[aria-labelledby="${sectionLabel}"] button`;
             }
 
