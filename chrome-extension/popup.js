@@ -721,7 +721,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
         // Show the upload section
         document.getElementById("upload-section").classList.remove("hidden");
-    });
+    });  
     
+    //LOTS TO WORK ON
 
 });
