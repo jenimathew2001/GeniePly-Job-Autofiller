@@ -477,8 +477,37 @@ document.addEventListener("DOMContentLoaded", function () {
                     
                             const filledSelectors = results?.[0]?.result || [];
                             console.log("✅ Form fields filled:", filledSelectors);
+
+                            // Now, extract the form fields again to find out remaining ones
+                            chrome.scripting.executeScript(
+                                {
+                                    target: { tabId: tabs[0].id },
+                                    function: extractFormFieldsDirectly // Function to extract form fields
+                                },
+                                (extractionResults) => {
+                                    if (chrome.runtime.lastError) {
+                                        console.error("❌ Error extracting form fields:", chrome.runtime.lastError.message);
+                                        return;
+                                    }
+                    
+                                    const extractedFields = extractionResults?.[0]?.result || [];
+                                    // console.log("🔍 Extracted Form Fields:", extractedFields);
+                    
+                                    // Filter out the filled fields based on selectors
+                                    const remainingFields = extractedFields.filter(field => {
+                                        const selector = field.selector;
+                                        return !filledSelectors.includes(selector); // Exclude filled fields
+                                    });
+                    
+                                    console.log("❗ Remaining Fields (not filled):", remainingFields);
+                                }
+
+
+                            );
                         }
                     );
+
+                    
                 }
             );
         });
