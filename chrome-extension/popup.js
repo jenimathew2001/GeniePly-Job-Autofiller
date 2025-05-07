@@ -531,6 +531,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 extractedFields = extractedFields.filter(field => {
                     const label = field.label?.toLowerCase() || "";
                     const name = field.name?.toLowerCase() || "";
+                    const id = field.id?.toLowerCase() || "";
     
                     return (
                         (field.id || field.name || field.label) &&
@@ -550,7 +551,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("alert") ||
                             label.includes("sign") ||
                             label.includes("log out") ||
+                            label.includes("english") ||
                             label.includes("candidate home") ||
+                            id.include("accountsettingsbutton") ||
+                            id.include("languageselectorbutton") ||
+                            id.include("settingsselectorbutton") ||
+
                             name.includes("vendor") ||
                             name.includes("chkbox")
                         )
