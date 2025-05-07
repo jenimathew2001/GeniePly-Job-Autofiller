@@ -488,8 +488,6 @@ document.addEventListener("DOMContentLoaded", function () {
     //     });
     // });
 
-    const SectionListener = {}
-
 
 
     document.getElementById("autofill-button").addEventListener("click", function () {
@@ -503,7 +501,6 @@ document.addEventListener("DOMContentLoaded", function () {
     
             const tabId = tabs[0].id;
             const filledSelectors = new Set();
-            const sectionInfo = {}
             let loopCounter = 0;
             const maxLoops = 5;
     
@@ -529,8 +526,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
     
                 let extractedFields = extractionResults?.[0]?.result || [];
-
-                console.log("✅ UnfILTERED extractedFields:", extractedFields);
     
                 // 2. Filter Unwanted Fields
                 extractedFields = extractedFields.filter(field => {
@@ -552,12 +547,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("language") ||
                             label.includes("submit") ||
                             label.includes("back") ||
-                            label.includes("careers page") ||
-                            label.includes("search") ||
-                            label.includes("alert") ||
-                            label.includes("sign out") ||
-                            label.includes("log out") ||
-                            label.includes("candidate home") ||
                             name.includes("vendor") ||
                             name.includes("chkbox")
                         )
@@ -599,7 +588,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log("✅ No new fields to fill. Exiting loop.");
                     break;
                 }
-                
     
                 console.log("🆕 New fields this round:", newFields);
     
@@ -637,8 +625,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.log("⚠️ No values available to autofill. Skipping this round.");
                     break;
                 }
-
-                console.log("🆕 Final fields this round:", finalFields );
     
                 // 7. Autofill
                 const results = await chrome.scripting.executeScript({
@@ -646,12 +632,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     function: executeAgentPlan,
                     args: [finalFields]  // 🚨 YOU NEED TO MAKE executeAgentPlan RETURN list of filled selectors
                 });
-
-                console.log('resultss',results)
-
-                console.log('Sections',SectionListener)
     
-                const newlyFilled = results?.[0]?.reult || [];
+                const newlyFilled = results?.[0]?.result || [];
     
                 if (newlyFilled.length === 0) {
                     console.log("🛑 No new fields filled by script. Ending loop.");
@@ -666,66 +648,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
     
-
-
-
     
-    /**
-     * Extracts matching data from the user profile based on field name or label.
-     */
-
-    // function executeAgentPlan(planSteps) {
-    //     console.log("🤖 Executing AI Agent Plan...");
-    
-    //     planSteps.forEach(step => {
-    //         try {
-    //             const { action, selector, value } = step;
-    //             const element = document.querySelector(selector);
-    
-    //             if (!element) {
-    //                 console.warn(`⚠️ Element not found for selector: ${selector}`);
-    //                 return;
-    //             }
-    
-    //             if (action === "click") {
-    //                 const repeat = step.times || 1;
-    //                 for (let i = 0; i < repeat; i++) {
-    //                     element.click();
-    //                 } 
-    //             }
-    //             else if (action === "type") {
-    //                 element.focus();
-    //                 element.value = value;
-    //                 element.dispatchEvent(new Event("input", { bubbles: true }));
-    //                 element.dispatchEvent(new Event("change", { bubbles: true }));
-    //                 console.log(`⌨️ Typed '${value}' into: ${selector}`);
-    //             } else if (action === "select") {
-                    
-    //                 const option = Array.from(element.options).find(opt => {
-    //                     const val = value.toLowerCase();
-    //                     return opt.text.toLowerCase().includes(val) || opt.value.toLowerCase().includes(val);
-    //                 });
-                    
-    //                 if (option) {
-    //                     element.value = option.value;
-    //                     element.dispatchEvent(new Event("change", { bubbles: true }));
-    //                     console.log(`🔽 Selected '${option.value}' in: ${selector}`);
-    //                 }
-    //             } else if (action === "check") {
-    //                 element.checked = true;
-    //                 element.dispatchEvent(new Event("change", { bubbles: true }));
-    //                 console.log(`☑️ Checked: ${selector}`);
-    //             }
-    //         } catch (e) {
-    //             console.error("❌ Error executing step:", step, e);
-    //         }
-    //     });
-    
-    //     console.log("✅ AI Agent Execution Complete");
-    // }
-
-    
-
     function executeAgentPlan(planSteps) {
         
         console.log("🤖 Executing AI Agent Plan...");
@@ -734,9 +657,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
         for (const step of planSteps) {
             try {
-                const { action,label, selector, value, times } = step;
+                const { action, selector, value, times } = step;
                 const element = document.querySelector(selector);
-                
     
                 if (!element) {
                     console.warn(`⚠️ Element not found for selector: ${selector}`);
@@ -784,13 +706,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 else if (action === "click") {
                     const repeat = times || 1;
-                    //pass label or element return section
-                    // includenumber of times clicked , so section : times put in SectionListener 
                     for (let i = 0; i < repeat; i++) {
                         element.click();
+                        // await new Promise(resolve => setTimeout(resolve, 500));
                     }
                     filledFields.add(selector);
-                    SectionListener[label] = repeat
                 }
                 console.log('filledFields',filledFields)
     
@@ -803,82 +723,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return Array.from(filledFields);
     }
 
-    
-    
-    
-    
-
-    
-    
-    
-
-    function getProfileValue(field, profile) {
-        let value = null;
-    
-        // **🔹 Improved Name Parsing Logic**
-        const fullNameParts = profile.name?.trim().split(/\s+/) || [];
-        let firstName = "n/a", middleName = "n/a", lastName = "n/a";
-    
-        if (fullNameParts.length === 1) {
-            firstName = fullNameParts[0];
-        } else if (fullNameParts.length === 2) {
-            [firstName, lastName] = fullNameParts;
-        } else if (fullNameParts.length > 2) {
-            firstName = fullNameParts[0];
-            lastName = fullNameParts[fullNameParts.length - 1];
-            middleName = fullNameParts.slice(1, -1).join(" ");
-        }
-        console.log('NAMES', firstName, middleName, lastName);
-    
-        // **🔹 Fix: Standard Field Mappings**
-        const fieldMappings = {
-            "email": profile.contact?.email,
-            "phone": profile.contact?.phone,
-            "location": profile.contact?.location,
-            "firstname": firstName,
-            "middlename": middleName,
-            "lastname": lastName,
-            "skills": profile.skills?.join(", ") || "",
-        };
-    
-        // **🔹 Fix: Improved Keyword Mapping for More Flexibility**
-        const keywordMappings = {
-            "email": ["email", "e-mail", "contact email", "email address", "work email"],
-            "phone": ["phone number", "mobile", "contact number", "telephone"],
-            "firstname": ["first name", "firstname", "given name", "fname"],
-            "middlename": ["middle name", "middlename"],
-            "lastname": ["last name", "lastname", "surname"],
-            "skills": ["skills", "expertise", "abilities"]
-        };
-    
-        // **🔹 Fix: Normalize Field Text for Matching**
-        let fieldText = `${field.name} ${field.label} ${field.id || ""}`.toLowerCase().trim();
-    
-        // **🔹 Fix: Prioritize Email Matching to Avoid Conflicts**
-        if (matchesKeyword(fieldText, keywordMappings["email"])) {
-            return fieldMappings["email"];
-        }
-    
-        // **🔹 Fix: Name Handling to Ensure Correct Assignment**
-        if (matchesKeyword(fieldText, keywordMappings["firstname"])) return firstName;
-        if (matchesKeyword(fieldText, keywordMappings["middlename"])) return middleName;
-        if (matchesKeyword(fieldText, keywordMappings["lastname"])) return lastName;
-    
-        // **🔹 Fix: Match Other Profile Fields Dynamically**
-        Object.keys(fieldMappings).forEach(key => {
-            if (matchesKeyword(fieldText, keywordMappings[key] || [])) {
-                value = fieldMappings[key];
-            }
-        });
-    
-        return value || ""; // Ensure function always returns a valid string
-    }
-    
-    // **🔹 Helper Function: Checks if Field Matches a Keyword**
-    function matchesKeyword(fieldText, keywords) {
-        fieldText = fieldText.toLowerCase(); // Convert fieldText to lowercase for case-insensitive matching
-        return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
-    }
 
     function extractFormFieldsDirectly() {
         console.log("🔍 Extracting form fields...");
@@ -968,6 +812,75 @@ document.addEventListener("DOMContentLoaded", function () {
     
         console.log("📌 Extracted Form Structure:", formStructure);
         return formStructure;
+    }
+
+    // **🔹 Helper Function: Checks if Field Matches a Keyword**
+    function matchesKeyword(fieldText, keywords) {
+        fieldText = fieldText.toLowerCase(); // Convert fieldText to lowercase for case-insensitive matching
+        return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
+    }
+
+    
+    function getProfileValue(field, profile) {
+        let value = null;
+    
+        // **🔹 Improved Name Parsing Logic**
+        const fullNameParts = profile.name?.trim().split(/\s+/) || [];
+        let firstName = "n/a", middleName = "n/a", lastName = "n/a";
+    
+        if (fullNameParts.length === 1) {
+            firstName = fullNameParts[0];
+        } else if (fullNameParts.length === 2) {
+            [firstName, lastName] = fullNameParts;
+        } else if (fullNameParts.length > 2) {
+            firstName = fullNameParts[0];
+            lastName = fullNameParts[fullNameParts.length - 1];
+            middleName = fullNameParts.slice(1, -1).join(" ");
+        }
+        console.log('NAMES', firstName, middleName, lastName);
+    
+        // **🔹 Fix: Standard Field Mappings**
+        const fieldMappings = {
+            "email": profile.contact?.email,
+            "phone": profile.contact?.phone,
+            "location": profile.contact?.location,
+            "firstname": firstName,
+            "middlename": middleName,
+            "lastname": lastName,
+            "skills": profile.skills?.join(", ") || "",
+        };
+    
+        // **🔹 Fix: Improved Keyword Mapping for More Flexibility**
+        const keywordMappings = {
+            "email": ["email", "e-mail", "contact email", "email address", "work email"],
+            "phone": ["phone number", "mobile", "contact number", "telephone"],
+            "firstname": ["first name", "firstname", "given name", "fname"],
+            "middlename": ["middle name", "middlename"],
+            "lastname": ["last name", "lastname", "surname"],
+            "skills": ["skills", "expertise", "abilities"]
+        };
+    
+        // **🔹 Fix: Normalize Field Text for Matching**
+        let fieldText = `${field.name} ${field.label} ${field.id || ""}`.toLowerCase().trim();
+    
+        // **🔹 Fix: Prioritize Email Matching to Avoid Conflicts**
+        if (matchesKeyword(fieldText, keywordMappings["email"])) {
+            return fieldMappings["email"];
+        }
+    
+        // **🔹 Fix: Name Handling to Ensure Correct Assignment**
+        if (matchesKeyword(fieldText, keywordMappings["firstname"])) return firstName;
+        if (matchesKeyword(fieldText, keywordMappings["middlename"])) return middleName;
+        if (matchesKeyword(fieldText, keywordMappings["lastname"])) return lastName;
+    
+        // **🔹 Fix: Match Other Profile Fields Dynamically**
+        Object.keys(fieldMappings).forEach(key => {
+            if (matchesKeyword(fieldText, keywordMappings[key] || [])) {
+                value = fieldMappings[key];
+            }
+        });
+    
+        return value || ""; // Ensure function always returns a valid string
     }
     
 
