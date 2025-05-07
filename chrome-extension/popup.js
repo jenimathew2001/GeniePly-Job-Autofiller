@@ -384,6 +384,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         )
                     );
                 });
+
+                console.log("✅UNFORMATTED EXTRACTEDFIELDS", extractedFields);
     
                 // 3. Format Fields
                 extractedFields = extractedFields.map(field => {
@@ -662,9 +664,9 @@ document.addEventListener("DOMContentLoaded", function () {
             lastName = fullNameParts[fullNameParts.length - 1];
             middleName = fullNameParts.slice(1, -1).join(" ");
         }
-        console.log('NAMES', firstName, middleName, lastName);
+        // console.log('NAMES', firstName, middleName, lastName);
 
-        console.log('EXPERIENCE', profile.experience);
+        // console.log('EXPERIENCE', profile.experience);
     
         // **🔹 Fix: Standard Field Mappings**
         const fieldMappings = {
