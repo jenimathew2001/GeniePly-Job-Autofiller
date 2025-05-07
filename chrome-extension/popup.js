@@ -550,6 +550,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         )
                     );
                 });
+
+                console.log("✅ Unformatted extractedFields:", extractedFields);
     
                 // 3. Format Fields
                 extractedFields = extractedFields.map(field => {
