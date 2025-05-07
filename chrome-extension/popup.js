@@ -529,6 +529,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
     
                 let extractedFields = extractionResults?.[0]?.result || [];
+
+                console.log("✅ UnfILTERED extractedFields:", extractedFields);
     
                 // 2. Filter Unwanted Fields
                 extractedFields = extractedFields.filter(field => {
