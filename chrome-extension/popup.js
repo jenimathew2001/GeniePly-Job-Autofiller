@@ -355,7 +355,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             (field.id || field.name || field.label) &&  // should have at least one identifier
                             field.fieldType !== "hidden" &&             // always ignore hidden fields
                     
-                            !(
+                            !( //LABEL OR ID INCLUDES THESE - UPDATE
                                 label.includes("save") ||
                                 label.includes("cookie") ||
                                 label.includes("switch") ||
@@ -466,9 +466,18 @@ document.addEventListener("DOMContentLoaded", function () {
                         {
                             target: { tabId: tabs[0].id },
                             function: executeAgentPlan,
-                            args: [finalFilledFields, [], null, profileData.cv_json] // Send profileData & pass Set as array
+                            args: [finalFilledFields] // Send profileData & pass Set as array
                         },
-                        () => console.log("✅ Form Autofilled")
+                        //() => console.log("✅ Form Autofilled")
+                        (results) => {
+                            if (chrome.runtime.lastError) {
+                                console.error("❌ Error autofilling form:", chrome.runtime.lastError.message);
+                                return;
+                            }
+                    
+                            const filledSelectors = results?.[0]?.result || [];
+                            console.log("✅ Form fields filled:", filledSelectors);
+                        }
                     );
                 }
             );
@@ -533,6 +542,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function executeAgentPlan(planSteps) {
         
         console.log("🤖 Executing AI Agent Plan...");
+
+        let filledFields = new Set();
     
         for (const step of planSteps) {
             try {
@@ -543,16 +554,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.warn(`⚠️ Element not found for selector: ${selector}`);
                     continue;
                 }
-    
-                if (action === "click") {
-                    const repeat = times || 1;
-                    for (let i = 0; i < repeat; i++) {
-                        element.click();
-                        // await new Promise(resolve => setTimeout(resolve, 500));
-                    }
-                }
 
-                else if (action === "type") {
+                if (action === "type") {
                     element.focus();
                 
                     // Use the correct native value setter depending on the element type
@@ -569,6 +572,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     element.dispatchEvent(new Event('change', { bubbles: true }));
                 
                     console.log(`⌨️ Typed '${value}' into: ${selector}`);
+                    filledFields.add(selector);
                 }
     
                 else if (action === "select") {
@@ -581,57 +585,24 @@ document.addEventListener("DOMContentLoaded", function () {
                         element.dispatchEvent(new Event("change", { bubbles: true }));
                         console.log(`🔽 Selected '${option.value}' in: ${selector}`);
                     }
+                    filledFields.add(selector);
                 }
     
                 else if (action === "check") {
                     element.checked = true;
                     element.dispatchEvent(new Event("change", { bubbles: true }));
                     console.log(`☑️ Checked: ${selector}`);
+                    filledFields.add(selector);
                 }
-    
-                // // 🧠 After each action, check if new fields appeared
-                // await new Promise(resolve => setTimeout(resolve, 300));
-                // const currentFormFields = extractFormFieldsDirectly();
-    
-                // // const baselineKeys = new Set(baselineFormFields.map(f =>
-                // //     `${f.id || f.name || f.label}`
-                // // ));
-                // // const newFields = currentFormFields.filter(f =>
-                // //     !baselineKeys.has(f.id || f.name || f.label)
-                // // );
-
-                // const baselineKeys = new Set(baselineFormFields.map(f => f.key));
-                // const newFields = currentFormFields.filter(f => f.key && !baselineKeys.has(f.key));
-
-    
-                // if (newFields.length > 0) {
-                //     console.log("🆕 New fields detected after interaction:", newFields);
-    
-                //     // Combine new fields with previous fields to form full structure
-                //     const fullFormStructure = [...baselineFormFields, ...newFields];
-    
-                //     const response = await fetch("https://genieply.onrender.com/ai-autofill", {
-                //         method: "POST",
-                //         headers: { "Content-Type": "application/json" },
-                //         body: JSON.stringify({
-                //             form_fields: fullFormStructure,
-                //             profile_data: profileData
-                //         })
-                //     });
-    
-                //     const data = await response.json();
-                //     if (data.form_fields_filled && Array.isArray(data.form_fields_filled)) {
-                //         const newSteps = data.form_fields_filled.filter(step =>
-                //             !filledSelectors.has(step.selector)
-                //         );
-                //         console.log("🔄 Executing new AI-generated steps:", newSteps);
-                //         await executeAgentPlan(newSteps, filledSelectors, fullFormStructure);
-                //     } else {
-                //         console.warn("⚠️ No form_fields_filled returned in updated step response.");
-                //     }
-    
-                //     return; // Prevent double execution
-                // }
+                else if (action === "click") {
+                    const repeat = times || 1;
+                    for (let i = 0; i < repeat; i++) {
+                        element.click();
+                        // await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                    filledFields.add(selector);
+                }
+                console.log('filledFields',filledFields)
     
             } catch (err) {
                 console.error("❌ Error executing step:", step, err);
@@ -639,7 +610,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     
         console.log("✅ AI Agent Execution Complete");
+        return Array.from(filledFields);
     }
+
+    
+    
     
     
 
