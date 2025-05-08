@@ -338,6 +338,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert("Please upload a CV or manually fill in your profile.");
                 return;
             }
+
+            const sectionContext = {
+                experienceCount: profileData.cv_json?.experience?.length || 0,
+                educationCount: profileData.cv_json?.education?.length || 0,
+                certificationCount: profileData.cv_json?.certifications?.length || 0
+            };
+
+            console.log('section count',sectionContext)
     
             console.log("✅ Loaded Profile:", profileData);
     
@@ -619,11 +627,6 @@ document.addEventListener("DOMContentLoaded", function () {
             let section = field.closest('[role="group"][aria-labelledby]');
             let sectionLabel = section ? section.getAttribute("aria-labelledby") : "";
 
-            // Now, let's go one level higher to get the parent section
-            let higherLevelSection = section ? section.closest('[role="group"][aria-labelledby]') : null;
-            let higherLevelSectionLabel = higherLevelSection ? higherLevelSection.getAttribute("aria-labelledby") : "";
-        
-
             let uniqueSelector = "";
             if (sectionLabel && field.tagName.toLowerCase() === "button" && label.toLowerCase() === "add") {
                 uniqueSelector = `[aria-labelledby="${sectionLabel}"] button`;
@@ -640,8 +643,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
                 fieldType: fieldType, // checkbox, radio, text, etc.
                 uniqueSelector: uniqueSelector || "",
-                sectionLabel: sectionLabel,
-                higherLevelSectionLabel: higherLevelSectionLabel
+                sectionLabel: sectionLabel
             });
 
             
