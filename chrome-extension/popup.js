@@ -327,6 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
             const tabId = tabs[0].id;
             const filledSelectors = new Set();
+            const sectionSelectors = new Set();
             let loopCounter = 0;
             const maxLoops = 5;
     
@@ -428,12 +429,18 @@ document.addEventListener("DOMContentLoaded", function () {
                         fieldType,
                         label: field.label,
                         action: actionType,
-                        selector
+                        selector,
+                        sectionLabel : field.sectionLabel, 
+                        sectionSelector : field.sectionSelector
                     };
                 });
     
                 // 4. Remove already filled
-                const newFields = extractedFields.filter(field => !filledSelectors.has(field.selector));
+                //const newFields = extractedFields.filter(field => !filledSelectors.has(field.selector));
+                const newFields = extractedFields.filter(field =>
+                    !filledSelectors.has(field.selector) &&
+                    (!field.sectionSelector || !sectionSelectors.has(field.sectionSelector))
+                );
     
                 if (newFields.length === 0) {
                     console.log("✅ No new fields to fill. Exiting loop.");
@@ -484,15 +491,21 @@ document.addEventListener("DOMContentLoaded", function () {
                     args: [finalFields]  // 🚨 YOU NEED TO MAKE executeAgentPlan RETURN list of filled selectors
                 });
     
-                const newlyFilled = results?.[0]?.result || [];
+                // const newlyFilled = results?.[0]?.result || [];
+                const { filledFields = [], sectionFields = [] } = results?.[0]?.result || {};
     
-                if (newlyFilled.length === 0) {
+                if (filledFields.length === 0) {
                     console.log("🛑 No new fields filled by script. Ending loop.");
                     break;
                 }
     
-                console.log("✅ Newly filled selectors:", newlyFilled);
-                newlyFilled.forEach(sel => filledSelectors.add(sel));
+                console.log("✅ Newly filled selectors:", filledFields);
+                filledFields.forEach(sel => filledSelectors.add(sel));
+
+                console.log("✅ Section selectors:", sectionFields);
+                sectionFields.forEach(sec => sectionSelectors.add(sec));
+
+                
             }
     
             console.log("✅ Autofill process complete.");
@@ -505,10 +518,11 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("🤖 Executing AI Agent Plan...");
 
         let filledFields = new Set();
+        let sectionFields = new Set();
     
         for (const step of planSteps) {
             try {
-                const { action, selector, value, times } = step;
+                const { action, selector,sectionSelector, value, times } = step;
                 const element = document.querySelector(selector);
     
                 if (!element) {
@@ -562,6 +576,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         // await new Promise(resolve => setTimeout(resolve, 500));
                     }
                     filledFields.add(selector);
+                    sectionFields.add(sectionSelector);
                 }
                 console.log('filledFields',filledFields)
     
@@ -571,7 +586,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     
         console.log("✅ AI Agent Execution Complete");
-        return Array.from(filledFields);
+        // return Array.from(filledFields);
+        return {
+            filledFields: Array.from(filledFields),
+            sectionFields: Array.from(sectionFields)
+        };
     }
 
     function extractFormFieldsDirectly() {
@@ -648,19 +667,6 @@ document.addEventListener("DOMContentLoaded", function () {
             let sectionHeading = sectionLabel ? document.getElementById(sectionLabel)?.innerText.trim() : "";
             let sectionSelector = sectionLabel ? `#${sectionLabel}` : "";
 
-            // Try to find a main section above (e.g., h2 or section div)
-            let mainSectionEl = section?.closest("section") || section?.closest("div[class*='section']");
-            let mainSectionHeading = "";
-            let mainSectionSelector = "";
-
-            if (mainSectionEl) {
-                let headingEl = mainSectionEl.querySelector("h2, h3");
-                if (headingEl) {
-                    mainSectionHeading = headingEl.innerText.trim();
-                    mainSectionSelector = headingEl.id ? `#${headingEl.id}` : "";
-                }
-            }
-
     
             formStructure.push({
                 name: field.name || "",
@@ -671,9 +677,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 fieldType: fieldType, // checkbox, radio, text, etc.
                 uniqueSelector: uniqueSelector || "",
                 sectionLabel: sectionHeading,
-                sectionSelector: sectionSelector,
-                mainSection: mainSectionHeading,
-                mainSectionSelector: mainSectionSelector
+                sectionSelector: sectionSelector
             });
 
             

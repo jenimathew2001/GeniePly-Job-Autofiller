@@ -218,7 +218,9 @@ If a field from Form Fields looks like:
     "fieldType": "text",
     "label": "City or Town",
     "action": "type",
-    "selector": "#address--city"
+    "selector": "#address--city",
+    "sectionLabel" : "Address", 
+    "sectionSelector" : "#Address-section"
 }}
 
 You should update it like:
@@ -227,6 +229,8 @@ You should update it like:
     "label": "City or Town",
     "action": "type",
     "selector": "#address--city",
+    "sectionLabel" : "Address", 
+    "sectionSelector" : "#Address-section",
     "value":"London"
 }}
 
@@ -236,7 +240,9 @@ If a field from Form Fields looks like:
     "fieldType": "submit",
     "label": "Add",
     "action": "click",
-    "selector": ".css-r6gqv6",
+    "selector": "selectorexample",
+    "sectionLabel" : "Education", 
+    "sectionSelector" : "#Education-section"
 }}
 
 You should update it like(4 experience to be filled so 4 times click add button):
@@ -244,7 +250,9 @@ You should update it like(4 experience to be filled so 4 times click add button)
     "fieldType": "submit",
     "label": "Add",
     "action": "click",
-    "selector": ".css-r6gqv6",
+    "selector": "selectorexample",
+    "sectionLabel" : "..sectionLabel", 
+    "sectionSelector" : "..sectionSelector",
     "times":4
 }}
 
@@ -256,6 +264,8 @@ Final JSON array must look like:
     "label": "LinkedIn",
     "action": "type",
     "selector": "#socialNetworkAccounts--linkedInAccount",
+    "sectionLabel" : "Social Network URLs", 
+    "sectionSelector" : "#Social-Network-URLs-section",
     "value":"https://www.linkedin.com/in/jeni-mathew-346253209/"
   }},
   {{
@@ -263,10 +273,13 @@ Final JSON array must look like:
     "label": "Add",
     "action": "click",
     "selector": ".css-r6gqv6",
+    "sectionLabel" : "..sectionLabel", 
+    "sectionSelector" : "..sectionSelector",
     "times":4
   }}
 ]
 
+If you feel any useless buttons are included, avoid including those fields in the final response
 ---
 
 🛑 STRICT JSON RULES:
