@@ -635,8 +635,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const fieldType = field.type?.toLowerCase() || field.tagName.toLowerCase();
 
             // Inside formStructure.push({...}), add:
-            // let section = field.closest('[role="group"][aria-labelledby]');
-            // let sectionLabel = section ? section.getAttribute("aria-labelledby") : "";
+            let section = field.closest('[role="group"][aria-labelledby]');
+            let sectionLabel = section ? section.getAttribute("aria-labelledby") : "";
 
             let uniqueSelector = "";
             if (sectionLabel && field.tagName.toLowerCase() === "button" && label.toLowerCase() === "add") {
@@ -645,13 +645,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // const key = (field.id || field.name || label || field.className || field.placeholder || field.type).toLowerCase().trim();
 
-            let sectionElement = field.closest('[role="group"][aria-labelledby]');
-            let sectionLabelId = sectionElement ? sectionElement.getAttribute("aria-labelledby") : "";
-            let sectionHeading = sectionLabelId ? document.getElementById(sectionLabelId)?.innerText.trim() : "";
-            let sectionSelector = sectionLabelId ? `#${sectionLabelId}` : "";
+            let sectionHeading = sectionLabel ? document.getElementById(sectionLabel)?.innerText.trim() : "";
+            let sectionSelector = sectionLabel ? `#${sectionLabel}` : "";
 
             // Try to find a main section above (e.g., h2 or section div)
-            let mainSectionEl = sectionElement?.closest("section") || sectionElement?.closest("div[class*='section']");
+            let mainSectionEl = section?.closest("section") || section?.closest("div[class*='section']");
             let mainSectionHeading = "";
             let mainSectionSelector = "";
 
@@ -673,7 +671,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 fieldType: fieldType, // checkbox, radio, text, etc.
                 uniqueSelector: uniqueSelector || "",
                 sectionLabel: sectionHeading,
-                sectionSelector: sectionSelector
+                sectionSelector: sectionSelector,
+                mainSection: mainSectionHeading,
+                mainSectionSelector: mainSectionSelector
             });
 
             
