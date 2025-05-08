@@ -367,6 +367,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     target: { tabId },
                     function: extractFormFieldsDirectly
                 });
+
+                console.log("✅EXTRACTED FIELDS", extractionResults)
     
                 let extractedFields = extractionResults?.[0]?.result || [];
     
