@@ -340,9 +340,18 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             const sectionContext = {
-                experienceCount: profileData.cv_json?.experience?.length || 0,
-                educationCount: profileData.cv_json?.education?.length || 0,
-                certificationCount: profileData.cv_json?.certifications?.length || 0
+                experienceCount: {
+                                    profile : profileData.cv_json?.experience?.length || 0,
+                                    clicked : 0
+                                },
+                educationCount: {
+                                    profile : profileData.cv_json?.education?.length || 0,
+                                    clicked : 0
+                                },
+                certificationCount: {
+                                    profile : profileData.cv_json?.certifications?.length || 0,
+                                    clicked : 0
+                                }
             };
 
             console.log('section count',sectionContext)
@@ -624,8 +633,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const fieldType = field.type?.toLowerCase() || field.tagName.toLowerCase();
 
             // Inside formStructure.push({...}), add:
-            let section = field.closest('[role="group"][aria-labelledby]');
-            let sectionLabel = section ? section.getAttribute("aria-labelledby") : "";
+            // let section = field.closest('[role="group"][aria-labelledby]');
+            // let sectionLabel = section ? section.getAttribute("aria-labelledby") : "";
 
             let uniqueSelector = "";
             if (sectionLabel && field.tagName.toLowerCase() === "button" && label.toLowerCase() === "add") {
@@ -633,6 +642,24 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // const key = (field.id || field.name || label || field.className || field.placeholder || field.type).toLowerCase().trim();
+
+            let sectionElement = field.closest('[role="group"][aria-labelledby]');
+            let sectionLabelId = sectionElement ? sectionElement.getAttribute("aria-labelledby") : "";
+            let sectionHeading = sectionLabelId ? document.getElementById(sectionLabelId)?.innerText.trim() : "";
+            let sectionSelector = sectionLabelId ? `#${sectionLabelId}` : "";
+
+            // Try to find a main section above (e.g., h2 or section div)
+            let mainSectionEl = sectionElement?.closest("section") || sectionElement?.closest("div[class*='section']");
+            let mainSectionHeading = "";
+            let mainSectionSelector = "";
+
+            if (mainSectionEl) {
+                let headingEl = mainSectionEl.querySelector("h2, h3");
+                if (headingEl) {
+                    mainSectionHeading = headingEl.innerText.trim();
+                    mainSectionSelector = headingEl.id ? `#${headingEl.id}` : "";
+                }
+            }
 
     
             formStructure.push({
@@ -643,7 +670,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 type: field.tagName.toLowerCase(), // input, textarea, select, button
                 fieldType: fieldType, // checkbox, radio, text, etc.
                 uniqueSelector: uniqueSelector || "",
-                sectionLabel: sectionLabel
+                sectionLabel: sectionHeading,
+                sectionSelector: sectionSelector,
+                mainSection: mainSectionHeading,
+                mainSectionSelector: mainSectionSelector
             });
 
             
