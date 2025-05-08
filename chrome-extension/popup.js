@@ -856,10 +856,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // }
     
     // // **🔹 Helper Function: Checks if Field Matches a Keyword**
-    // function matchesKeyword(fieldText, keywords) {
-    //     fieldText = fieldText.toLowerCase(); // Convert fieldText to lowercase for case-insensitive matching
-    //     return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
-    // }
+    function matchesKeyword(fieldText, keywords) {
+        fieldText = fieldText.toLowerCase(); // Convert fieldText to lowercase for case-insensitive matching
+        return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
+    }
     
 
     
