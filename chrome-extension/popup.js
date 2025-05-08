@@ -688,98 +688,96 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getProfileValue(field, profile) {
-        let value = "";
+        let value = null;
     
-        // Normalize label and name for matching
-        const fieldText = `${field.label} ${field.name} ${field.id}`.toLowerCase().trim();
-    
-        // Name parsing logic
-        const nameParts = profile.name?.trim().split(/\s+/) || [];
-        const firstName = nameParts[0] || "";
-        const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
-        const middleName = nameParts.slice(1, -1).join(" ");
-    
-        // Flat field mapping
-        const flatMappings = {
-            email: profile.contact?.email,
-            phone: profile.contact?.phone,
-            location: profile.contact?.location,
-            firstname: firstName,
-            middlename: middleName,
-            lastname: lastName,
-            skills: Array.isArray(profile.skills) ? profile.skills.join(", ") : ""
-        };
-    
-        const keywordMappings = {
-            email: ["email", "e-mail", "contact email", "work email"],
-            phone: ["phone number", "mobile", "telephone"],
-            location: ["current location", "city", "location"],
-            firstname: ["first name", "given name", "fname"],
-            middlename: ["middle name"],
-            lastname: ["last name", "surname", "lname"],
-            skills: ["skills", "expertise", "abilities"]
-        };
-    
-        // First: check for flat fields
-        for (const key in keywordMappings) {
-            if (matchesKeyword(fieldText, keywordMappings[key])) {
-                return flatMappings[key] || "";
-            }
+        // 🔹 Name Parsing
+        const fullNameParts = profile.name?.trim().split(/\s+/) || [];
+        let firstName = "n/a", middleName = "n/a", lastName = "n/a";
+        if (fullNameParts.length === 1) {
+            firstName = fullNameParts[0];
+        } else if (fullNameParts.length === 2) {
+            [firstName, lastName] = fullNameParts;
+        } else if (fullNameParts.length > 2) {
+            firstName = fullNameParts[0];
+            lastName = fullNameParts[fullNameParts.length - 1];
+            middleName = fullNameParts.slice(1, -1).join(" ");
         }
     
-        // Section-based logic
-        const sections = {
-            experience: profile.experience || [],
-            education: profile.education || [],
-            certifications: profile.certifications || []
+        // 🔹 Field Mappings
+        const fieldMappings = {
+            "email": profile.contact?.email,
+            "phone": profile.contact?.phone,
+            "location": profile.contact?.location,
+            "firstname": firstName,
+            "middlename": middleName,
+            "lastname": lastName,
+            "skills": profile.skills?.join(", ") || "",
         };
     
-        const sectionFieldMappings = {
-            experience: {
-                title: ["title", "job title", "role"],
-                company: ["company", "employer"],
-                location: ["location", "city"],
-                year: ["year", "date", "duration", "time"],
-                domain: ["domain", "field", "industry"],
-                responsibilities: ["responsibilities", "description", "tasks"]
-            },
-            education: {
-                degree: ["degree", "qualification", "course"],
-                institution: ["school", "college", "university", "institution"],
-                year: ["year", "date", "graduation"],
-                grade: ["grade", "score", "cgpa"]
-            },
-            certifications: {
-                name: ["certificate", "certification", "name"],
-                year: ["year", "date", "obtained"],
-                authority: ["authority", "issuer", "organization"]
-            }
+        // 🔹 Keyword Mappings
+        const keywordMappings = {
+            "email": ["email", "e-mail", "contact email", "email address", "work email"],
+            "phone": ["phone number", "mobile", "contact number", "telephone"],
+            "firstname": ["first name", "firstname", "given name", "fname"],
+            "middlename": ["middle name", "middlename"],
+            "lastname": ["last name", "lastname", "surname"],
+            "skills": ["skills", "expertise", "abilities"]
         };
     
-        for (const section in sections) {
-            const items = sections[section];
-            if (!Array.isArray(items) || items.length === 0) continue;
+        // 🔹 Normalize Field Text
+        let fieldText = `${field.name} ${field.label} ${field.id || ""}`.toLowerCase().trim();
     
-            // Try to extract index: "Work Experience 1" => index 0
-            const indexMatch = fieldText.match(new RegExp(`${section}\\s*(\\d+)`, "i"));
-            const index = indexMatch ? parseInt(indexMatch[1], 10) - 1 : 0;
-            const item = items[index] || items[0];
+        // 🔹 Prioritized Matching
+        if (matchesKeyword(fieldText, keywordMappings["email"])) return fieldMappings["email"];
+        if (matchesKeyword(fieldText, keywordMappings["firstname"])) return firstName;
+        if (matchesKeyword(fieldText, keywordMappings["middlename"])) return middleName;
+        if (matchesKeyword(fieldText, keywordMappings["lastname"])) return lastName;
     
-            const mappings = sectionFieldMappings[section];
+        // 🔹 Dynamic Repeatable Sections: Experience, Education, Certification
+        const repeatableSections = {
+            "experience": profile.experience || [],
+            "education": profile.education || [],
+            "certifications": profile.certifications || []
+        };
     
-            for (const key in mappings) {
-                if (matchesKeyword(fieldText, mappings[key])) {
-                    const val = item[key];
-                    return Array.isArray(val) ? val.join(", ") : val || "";
+        for (let section in repeatableSections) {
+            const entries = repeatableSections[section];
+            for (let i = 0; i < entries.length; i++) {
+                const entry = entries[i];
+                const index = i + 1;
+                for (let key in entry) {
+                    let possibleFieldNames = [
+                        `${section} ${key} ${index}`,     // e.g., "experience title 1"
+                        `${key} ${section} ${index}`,     // e.g., "title experience 1"
+                        `${key} ${index}`,                // e.g., "title 1"
+                        `${section}${index} ${key}`       // e.g., "experience1 title"
+                    ];
+                    for (let name of possibleFieldNames) {
+                        if (fieldText.includes(name.toLowerCase())) {
+                            // Handle array fields like responsibilities
+                            if (Array.isArray(entry[key])) {
+                                return entry[key].join(", ");
+                            }
+                            return entry[key];
+                        }
+                    }
                 }
             }
         }
     
-        return "";
+        // 🔹 Fallback Dynamic Matching
+        Object.keys(fieldMappings).forEach(key => {
+            if (matchesKeyword(fieldText, keywordMappings[key] || [])) {
+                value = fieldMappings[key];
+            }
+        });
+    
+        return value || ""; // Always return a string
     }
     
+    // 🔹 Helper: Keyword Match
     function matchesKeyword(fieldText, keywords) {
-        return keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
+        return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
     }
     
 
