@@ -673,9 +673,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 fieldType: fieldType, // checkbox, radio, text, etc.
                 uniqueSelector: uniqueSelector || "",
                 sectionLabel: sectionHeading,
-                sectionSelector: sectionSelector,
-                mainSection: mainSectionHeading,
-                mainSectionSelector: mainSectionSelector
+                sectionSelector: sectionSelector
             });
 
             
