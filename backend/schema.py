@@ -81,102 +81,33 @@ json_schema = {
     "required": ["name", "contact", "education", "experience"]
 }
 
-
-autofill_schema = {
-    "title": "ai_autofill",
-    "description": "AI-generated mapping of extracted form fields to user profile data.",
+autofill_json_schema = {
+    "title": "form_fields_filled",
+    "description": "Autofilling job application fields",
     "type": "object",
     "properties": {
-        "form_fields_filled": {
+        "fields": {
             "type": "array",
-            "description": "List of form fields and their AI-matched actions and values.",
             "items": {
                 "type": "object",
                 "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "The name attribute of the form field.",
-                        "default": "N/A"
-                    },
-                    "id": {
-                        "type": "string",
-                        "description": "The id attribute of the form field (if available).",
-                        "default": "N/A"
-                    },
-                    "label": {
-                        "type": "string",
-                        "description": "The visible label of the field.",
-                        "default": "N/A"
-                    },
-                    "type": {
-                        "type": "string",
-                        "description": "Type of HTML element (input, select, checkbox, radio, textarea, button).",
-                        "enum": ["input", "select", "checkbox", "radio", "textarea", "button"],
-                        "default": "input"
-                    },
-                    "fieldType": {
-                        "type": "string",
-                        "description": "Specific type of input (e.g., text, email, submit, file, etc.).",
-                        "default": "text"
-                    },
-                    "classList": {
-                        "type": "string",
-                        "description": "CSS class names associated with the field (space-separated).",
-                        "default": "N/A"
-                    },
-                    "action": {
-                        "type": "string",
-                        "description": "Action to perform on the field: 'click', 'type', 'select', or 'check'.",
-                        "enum": ["click", "type", "select", "check"],
-                        "default": "type"
-                    },
-                    "times": {
-                        "type": "integer",
-                        "description": "Number of times to repeat the action (only for 'click' actions).",
-                        "minimum": 1
-                    },
-                    "value": {
-                        "type": "string",
-                        "description": "The value to type or select for the field (only for 'type' and 'select' actions).",
-                        "default": "N/A"
-                    }
+                    "fieldType": {"type": "string"},
+                    "label": {"type": "string"},
+                    "action": {"type": "string"},
+                    "selector": {"type": "string"},
+                    "sectionLabel": {"type": "string"},
+                    "sectionSelector": {"type": "string"},
+                    "value": {"type": "string"},
+                    "times": {"type": "integer"}
                 },
-                "required": ["name", "id", "type", "action"]
+                "required": [
+                    "fieldType", "label", "action", "selector",
+                    "sectionLabel", "sectionSelector"
+                ],
+                "additionalProperties": False
             }
         }
     },
-    "required": ["form_fields_filled"]
+    "required": ["fields"]
 }
 
-
-# Define the schema for an array of agent steps
-autofill_agent_schema = {
-    "title": "autofill_agent_steps",
-    "description": "A list of step-by-step actions (click/type/select/check) to fill a job application form",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "action": {
-                "type": "string",
-                "enum": ["click", "type", "select", "check"],
-                "description": "Which action to perform"
-            },
-            "selector": {
-                "type": "string",
-                "description": "CSS selector to target the element"
-            },
-            "value": {
-                "type": "string",
-                "description": "Value for type/select actions",
-                "default": ""
-            },
-            "times": {
-                "type": "integer",
-                "description": "How many times to repeat a click",
-                "default": 1
-            }
-        },
-        "required": ["action", "selector"]
-    }
-}
