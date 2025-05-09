@@ -475,7 +475,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     });
     
                     const aiResult = await aiResponse.json();
-                    aiFilledData = aiResult?.form_fields_filled || [];
+                    aiFilledData = aiResult?.fields || [];
                     console.log("🤖 AI Filled:", aiFilledData);
                 }
     

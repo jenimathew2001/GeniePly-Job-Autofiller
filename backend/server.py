@@ -5,7 +5,7 @@ from backend.extract_cv_data import extract_text_from_pdf, get_json_resume, get_
 import json
 
 from langchain.chat_models import init_chat_model
-from backend.schema import autofill_schema, autofill_agent_schema
+from backend.schema import autofill_json_schema
 
 from supabase import create_client, Client
 
@@ -169,6 +169,43 @@ def get_user_profile(email):
         return jsonify({"error": str(e)}), 500
 
 
+def generate_autofill_prompt(form_fields, profile_data):
+    return f"""
+You are a smart job application AI assistant.
+
+Your task is to update ONLY the following fields listed under "Form Fields" below.
+
+### Form Fields:
+{json.dumps(form_fields, indent=2)}
+
+In each form field you must add the following:
+- `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
+- `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
+
+### Resume Data:
+{json.dumps(profile_data, indent=2)}
+
+### Special Rule for "Add" Buttons:
+- If there is an "Add" button (example: to add Education, Experience, Skills, etc.), you MUST click it multiple times.
+- The number of clicks should be (Total number of entries in Resume Data).
+- Example: If there are 3 Experiences in resume, and the form already shows 1 entry, you need to click "Add Experience" **2 times** (`times: 2`).
+
+You MUST carefully go through the Resume Data and fill appropriate values.
+
+---
+Return ONLY a strict JSON array. No extra text, no explanation, no comments outside the array.
+"""
+
+
+def clean_output(data):
+    for item in data:
+        if 'times' in item and item['times'] is None:
+            del item['times']
+        if 'value' in item and item['value'] is None:
+            del item['value']
+    return data
+
+
 @app.route("/ai-autofill", methods=["POST"])
 def ai_autofill():
     data = request.json
@@ -185,152 +222,32 @@ def ai_autofill():
     try:
         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
         print("✅ LLM Initialized")
-
-        prompt = f"""
-You are a smart job application AI assistant.
-
-Your task is to update ONLY the following fields listed under "Form Fields" below.
-
-### Form Fields:
-{json.dumps(form_fields, indent=2)}
-
-In each form field you must add the following:
-- `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
-- `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
-
-### Special Rule for "Add" Buttons:
-- If there is an "Add" button (example: to add Education, Experience, Skills, etc.), you MUST click it multiple times.
-- The number of clicks should be (Total number of entries in Resume Data).
-- Example: If there are 3 Experiences in resume, and the form already shows 1 entry, you need to click "Add Experience" **2 times** (`times: 2`).
-
-You MUST carefully go through the Resume Data and fill appropriate values.
-
-### Resume Data:
-{json.dumps(profile_data, indent=2)}
-
----
-Return ONLY a strict JSON array. 
-No extra text, no explanation, no comments outside the array.
-
-Example 1:
-If a field from Form Fields looks like:
-{{
-    "fieldType": "text",
-    "label": "City or Town",
-    "action": "type",
-    "selector": "#address--city",
-    "sectionLabel" : "Address", 
-    "sectionSelector" : "#Address-section"
-}}
-
-You should update it like:
-{{
-    "fieldType": "text",
-    "label": "City or Town",
-    "action": "type",
-    "selector": "#address--city",
-    "sectionLabel" : "Address", 
-    "sectionSelector" : "#Address-section",
-    "value":"London"
-}}
-
-Example 2:
-If a field from Form Fields looks like:
-{{
-    "fieldType": "submit",
-    "label": "Add",
-    "action": "click",
-    "selector": "selectorexample",
-    "sectionLabel" : "Education", 
-    "sectionSelector" : "#Education-section"
-}}
-
-You should update it like(4 experience to be filled so 4 times click add button):
-{{
-    "fieldType": "submit",
-    "label": "Add",
-    "action": "click",
-    "selector": "selectorexample",
-    "sectionLabel" : "..sectionLabel", 
-    "sectionSelector" : "..sectionSelector",
-    "times":4
-}}
-
-Example 3:
-Final JSON array must look like:
-[
-  {{
-    "fieldType": "text",
-    "label": "LinkedIn",
-    "action": "type",
-    "selector": "#socialNetworkAccounts--linkedInAccount",
-    "sectionLabel" : "Social Network URLs", 
-    "sectionSelector" : "#Social-Network-URLs-section",
-    "value":"https://www.linkedin.com/in/jeni-mathew-346253209/"
-  }},
-  {{
-    "fieldType": "submit",
-    "label": "Add",
-    "action": "click",
-    "selector": ".css-r6gqv6",
-    "sectionLabel" : "..sectionLabel", 
-    "sectionSelector" : "..sectionSelector",
-    "times":4
-  }}
-]
-
-If you feel any useless buttons are included, avoid including those fields in the final response
----
-
-🛑 STRICT JSON RULES:
-- No markdown formatting like ```json
-- No explanation text before or after JSON
-- No extra fields that are not listed under Form Fields
-- No guessing if Resume Data does not have the correct information
-
-Remember if n number of fields are being given to you I want only those updated n in the response!
-and
-ONLY return the JSON array as final output.
-"""
-
-
-        # response = llm.invoke(prompt)
-
-        ai_message = llm.invoke(prompt)
-        text_output = ai_message.content if hasattr(ai_message, 'content') else ai_message
-
-        try:
-            import re
-
-            # Extract the JSON array from the response text
-            match = re.search(r'\[\s*{.*}\s*]', text_output, re.DOTALL)
-            if not match:
-                return jsonify({"error": "Failed to locate JSON array in response", "raw": text_output}), 500
-
-            json_text = match.group(0)
-            response_json = json.loads(json_text)
-
-
-            # response_json = json.loads(text_output)
-        except Exception as e:
-            print("❌ Failed to parse AI response:", text_output)
-            return jsonify({"error": "Failed to parse LLM output", "details": str(e)}), 500
-
-
-
-        # if isinstance(response, str):
-        #     try:
-        #         response = json.loads(response)
-        #     except Exception as e:
-        #         return jsonify({"error": "Invalid JSON from LLM", "details": str(e)}), 500
-
-        # return jsonify(response_json)
-        return jsonify({"form_fields_filled": response_json})
-
-
+        print("📐 Setting Up Structured LLM Output...")
+        structured_llm = llm.with_structured_output(autofill_json_schema)
     except Exception as e:
-        print(f"❌ AI Processing Failed: {e}")
-        return jsonify({"error": "AI Processing Failed", "details": str(e)}), 500
+        print(f"❌ LLM Initialization Error: {e}")
+        return {"error": "Failed to initialize LLM"}
+    
+    print("📝 Generating Prompt for LLM...")
+    
+    prompt = generate_autofill_prompt(form_fields, profile_data)
+    print("📜 Prompt Preview:\n", prompt[:30], "...")
+
+    try : 
+        structured_output = structured_llm.invoke(prompt)
+        structured_output = clean_output(structured_output)
+        print(structured_output)
+    except Exception as e:
+        print("Failed to invoke prompt",e)
+        return {"error": "Failed to invoke prompt"}
+
+    if not isinstance(structured_output['fields'], list):
+        print("Invalid JSON structure received from LLM",structured_output)
+        raise ValueError("Invalid JSON structure received from LLM")
+
+    print("✅ Structured Output Received",structured_output)
+
+    return jsonify(structured_output)
 
 
 
