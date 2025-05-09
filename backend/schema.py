@@ -101,8 +101,7 @@ autofill_json_schema = {
                     "times": {"type": "integer"}
                 },
                 "required": [
-                    "fieldType", "label", "action", "selector",
-                    "sectionLabel", "sectionSelector"
+                    "fieldType", "label", "action", "selector"
                 ],
                 "additionalProperties": False
             }
