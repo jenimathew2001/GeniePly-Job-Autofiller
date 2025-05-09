@@ -318,7 +318,7 @@ def estimate_tokens(text_or_dict):
 
 def chunk_form_fields(form_fields, profile_data, max_tokens=7000):
     profile_tokens = estimate_tokens(profile_data)
-    instruction_tokens = 1000  # fixed rough estimate for the static instructions
+    instruction_tokens = 2000  # fixed rough estimate for the static instructions
     available_tokens = max_tokens - profile_tokens - instruction_tokens
 
     chunks = []
