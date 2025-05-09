@@ -688,78 +688,177 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("📌 Extracted Form Structure:", formStructure);
         return formStructure;
     }
-    
 
     function getProfileValue(field, profile) {
-        let value = null;
+        let value = "";
     
-        // **🔹 Improved Name Parsing Logic**
-        const fullNameParts = profile.name?.trim().split(/\s+/) || [];
+        // 🔹 Parse name
+        const fullNameParts = (profile.name || "").trim().split(/\s+/);
         let firstName = "n/a", middleName = "n/a", lastName = "n/a";
-    
-        if (fullNameParts.length === 1) {
+        if (fullNameParts.length === 1) firstName = fullNameParts[0];
+        else if (fullNameParts.length === 2) [firstName, lastName] = fullNameParts;
+        else if (fullNameParts.length > 2) {
             firstName = fullNameParts[0];
-        } else if (fullNameParts.length === 2) {
-            [firstName, lastName] = fullNameParts;
-        } else if (fullNameParts.length > 2) {
-            firstName = fullNameParts[0];
-            lastName = fullNameParts[fullNameParts.length - 1];
             middleName = fullNameParts.slice(1, -1).join(" ");
+            lastName = fullNameParts[fullNameParts.length - 1];
         }
-        // console.log('NAMES', firstName, middleName, lastName);
-
-        // console.log('EXPERIENCE', profile.experience);
     
-        // **🔹 Fix: Standard Field Mappings**
         const fieldMappings = {
-            "email": profile.contact?.email,
-            "phone": profile.contact?.phone,
-            "location": profile.contact?.location,
+            "email": profile.contact?.email || "",
+            "phone": profile.contact?.phone || "",
+            "location": profile.contact?.location || "",
             "firstname": firstName,
             "middlename": middleName,
             "lastname": lastName,
             "skills": profile.skills?.join(", ") || "",
-            
         };
     
-        // **🔹 Fix: Improved Keyword Mapping for More Flexibility**
         const keywordMappings = {
-            "email": ["email", "e-mail", "contact email", "email address", "work email"],
-            "phone": ["phone number", "mobile", "contact number", "telephone"],
-            "firstname": ["first name", "firstname", "given name", "fname"],
-            "middlename": ["middle name", "middlename"],
-            "lastname": ["last name", "lastname", "surname"],
-            "skills": ["skills", "expertise", "abilities"]
+            email: ["email", "e-mail", "contact email", "email address"],
+            phone: ["phone", "mobile", "contact number"],
+            firstname: ["first name", "firstname", "given name"],
+            middlename: ["middle name", "middlename"],
+            lastname: ["last name", "lastname", "surname"],
+            skills: ["skills", "expertise", "abilities"]
         };
     
-        // **🔹 Fix: Normalize Field Text for Matching**
-        let fieldText = `${field.name} ${field.label} ${field.sectionLabel}${field.id || ""}`.toLowerCase().trim();
+        const fieldText = `${field.name} ${field.label} ${field.sectionLabel || ""} ${field.id || ""}`.toLowerCase();
     
-        // **🔹 Fix: Prioritize Email Matching to Avoid Conflicts**
-        if (matchesKeyword(fieldText, keywordMappings["email"])) {
-            return fieldMappings["email"];
-        }
-    
-        // **🔹 Fix: Name Handling to Ensure Correct Assignment**
+        // 🔹 Basic match
+        if (matchesKeyword(fieldText, keywordMappings["email"])) return fieldMappings["email"];
         if (matchesKeyword(fieldText, keywordMappings["firstname"])) return firstName;
         if (matchesKeyword(fieldText, keywordMappings["middlename"])) return middleName;
         if (matchesKeyword(fieldText, keywordMappings["lastname"])) return lastName;
     
-        // **🔹 Fix: Match Other Profile Fields Dynamically**
+        // 🔹 Experience
+        if (fieldText.includes("experience")) {
+            const match = fieldText.match(/experience\s*(\d+)/);
+            const index = match ? parseInt(match[1]) - 1 : -1;
+            const experience = profile.experience?.[index];
+            if (experience) {
+                if (fieldText.includes("title") || fieldText.includes("position")) return experience.title || "";
+                if (fieldText.includes("company") || fieldText.includes("employer")) return experience.company || "";
+                if (fieldText.includes("location")) return experience.location || "";
+                if (fieldText.includes("year") || fieldText.includes("start")) return experience.year || "";
+                if (fieldText.includes("domain")) return experience.domain || "";
+                if (fieldText.includes("responsibility") || fieldText.includes("description")) {
+                    return experience.responsibilities?.join("; ") || "";
+                }
+            }
+        }
+    
+        // 🔹 Education
+        if (fieldText.includes("education")) {
+            const match = fieldText.match(/education\s*(\d+)/);
+            const index = match ? parseInt(match[1]) - 1 : -1;
+            const education = profile.education?.[index];
+            if (education) {
+                if (fieldText.includes("degree")) return education.degree || "";
+                if (fieldText.includes("institution") || fieldText.includes("school") || fieldText.includes("college")) return education.institution || "";
+                if (fieldText.includes("location")) return education.location || "";
+                if (fieldText.includes("year")) return education.year || "";
+                if (fieldText.includes("grade") || fieldText.includes("gpa")) return education.grade || "";
+            }
+        }
+    
+        // 🔹 Certifications (empty in your example, but structure is ready)
+        if (fieldText.includes("certification")) {
+            const match = fieldText.match(/certification\s*(\d+)/);
+            const index = match ? parseInt(match[1]) - 1 : -1;
+            const cert = profile.certifications?.[index];
+            if (cert) {
+                if (fieldText.includes("name")) return cert.name || "";
+                if (fieldText.includes("issuer")) return cert.issuer || "";
+                if (fieldText.includes("date")) return cert.date || "";
+            }
+        }
+    
+        // 🔹 Try fallback keyword mapping
         Object.keys(fieldMappings).forEach(key => {
             if (matchesKeyword(fieldText, keywordMappings[key] || [])) {
                 value = fieldMappings[key];
             }
         });
     
-        return value || ""; // Ensure function always returns a valid string
+        return value || "";
     }
     
-    // // **🔹 Helper Function: Checks if Field Matches a Keyword**
-    function matchesKeyword(fieldText, keywords) {
-        fieldText = fieldText.toLowerCase(); // Convert fieldText to lowercase for case-insensitive matching
-        return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
+    function matchesKeyword(text, keywords) {
+        return keywords.some(keyword => text.includes(keyword.toLowerCase()));
     }
+    
+    
+
+    // function getProfileValue(field, profile) {
+    //     let value = null;
+    
+    //     // **🔹 Improved Name Parsing Logic**
+    //     const fullNameParts = profile.name?.trim().split(/\s+/) || [];
+    //     let firstName = "n/a", middleName = "n/a", lastName = "n/a";
+    
+    //     if (fullNameParts.length === 1) {
+    //         firstName = fullNameParts[0];
+    //     } else if (fullNameParts.length === 2) {
+    //         [firstName, lastName] = fullNameParts;
+    //     } else if (fullNameParts.length > 2) {
+    //         firstName = fullNameParts[0];
+    //         lastName = fullNameParts[fullNameParts.length - 1];
+    //         middleName = fullNameParts.slice(1, -1).join(" ");
+    //     }
+    //     // console.log('NAMES', firstName, middleName, lastName);
+
+    //     // console.log('EXPERIENCE', profile.experience);
+    
+    //     // **🔹 Fix: Standard Field Mappings**
+    //     const fieldMappings = {
+    //         "email": profile.contact?.email,
+    //         "phone": profile.contact?.phone,
+    //         "location": profile.contact?.location,
+    //         "firstname": firstName,
+    //         "middlename": middleName,
+    //         "lastname": lastName,
+    //         "skills": profile.skills?.join(", ") || "",
+            
+    //     };
+    
+    //     // **🔹 Fix: Improved Keyword Mapping for More Flexibility**
+    //     const keywordMappings = {
+    //         "email": ["email", "e-mail", "contact email", "email address", "work email"],
+    //         "phone": ["phone number", "mobile", "contact number", "telephone"],
+    //         "firstname": ["first name", "firstname", "given name", "fname"],
+    //         "middlename": ["middle name", "middlename"],
+    //         "lastname": ["last name", "lastname", "surname"],
+    //         "skills": ["skills", "expertise", "abilities"]
+    //     };
+    
+    //     // **🔹 Fix: Normalize Field Text for Matching**
+    //     let fieldText = `${field.name} ${field.label} ${field.sectionLabel}${field.id || ""}`.toLowerCase().trim();
+    
+    //     // **🔹 Fix: Prioritize Email Matching to Avoid Conflicts**
+    //     if (matchesKeyword(fieldText, keywordMappings["email"])) {
+    //         return fieldMappings["email"];
+    //     }
+    
+    //     // **🔹 Fix: Name Handling to Ensure Correct Assignment**
+    //     if (matchesKeyword(fieldText, keywordMappings["firstname"])) return firstName;
+    //     if (matchesKeyword(fieldText, keywordMappings["middlename"])) return middleName;
+    //     if (matchesKeyword(fieldText, keywordMappings["lastname"])) return lastName;
+    
+    //     // **🔹 Fix: Match Other Profile Fields Dynamically**
+    //     Object.keys(fieldMappings).forEach(key => {
+    //         if (matchesKeyword(fieldText, keywordMappings[key] || [])) {
+    //             value = fieldMappings[key];
+    //         }
+    //     });
+    
+    //     return value || ""; // Ensure function always returns a valid string
+    // }
+    
+    // // // **🔹 Helper Function: Checks if Field Matches a Keyword**
+    // function matchesKeyword(fieldText, keywords) {
+    //     fieldText = fieldText.toLowerCase(); // Convert fieldText to lowercase for case-insensitive matching
+    //     return Array.isArray(keywords) && keywords.some(keyword => fieldText.includes(keyword.toLowerCase()));
+    // }
     
 
     
