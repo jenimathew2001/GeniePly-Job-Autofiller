@@ -245,6 +245,7 @@ You should update it like(4 experience to be filled so 4 times click add button)
 
 ## FINAL INSTRUCTIONS:
 
+* DO NOT skip any fields — if 20 fields are provided, you MUST return exactly 20 fields in your output, each updated accordingly.
 * Do NOT change any existing content, just add `value` or `times`.
 * Ensure the final response is a **pure JSON array**.
 * The output must be clean and directly parsable.
