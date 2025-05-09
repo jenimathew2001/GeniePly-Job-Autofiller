@@ -464,6 +464,8 @@ document.addEventListener("DOMContentLoaded", function () {
     
                 // 6. AI fill for unknown fields
                 let aiFilledData = [];
+                console.log('formfields',unknownFields)
+                console.log('profiledata',profileData.cv_json)
     
                 if (unknownFields.length > 0) {
                     const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
