@@ -447,7 +447,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     break;
                 }
     
-                console.log("🆕 New fields this round:", newFields);
+                // console.log("🆕 New fields this round:", newFields);
     
                 // 5. Split known/unknown
                 const knownFields = [];
@@ -461,11 +461,14 @@ document.addEventListener("DOMContentLoaded", function () {
                         unknownFields.push(field);
                     }
                 }
+
+                console.log("🆕 knownFields this round:", knownFields);
+                console.log("🆕 unknownFields this round:", unknownFields);
     
                 // 6. AI fill for unknown fields
                 let aiFilledData = [];
-                console.log('formfields',unknownFields)
-                console.log('profiledata',profileData.cv_json)
+                // console.log('formfields',unknownFields)
+                // console.log('profiledata',profileData.cv_json)
     
                 if (unknownFields.length > 0) {
                     const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
