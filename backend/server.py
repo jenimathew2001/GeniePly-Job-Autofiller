@@ -171,29 +171,85 @@ def get_user_profile(email):
 
 def generate_autofill_prompt(form_fields, profile_data):
     return f"""
-You are a smart job application AI assistant.
+You are an intelligent assistant built to auto-fill job application forms based on resume data.
 
-Your task is to update ONLY the following fields listed under "Form Fields" below.
+## OBJECTIVE:
+You will receive a list of form fields and a resume (in JSON format). Your job is to return **the exact same list of form fields**, but with appropriate additions:
+- `value`: (only if the field action is "type" or "select")
+- `times`: (only if the field action is "click", e.g., to add multiple items)
+
+## IMPORTANT RULES:
+- Do NOT remove, rename, or change any existing properties.
+- Do NOT touch anything else like `selector`, `label`, `sectionLabel`, etc.
+- You are ONLY allowed to **add** a `value` or `times` to each field, based strictly on the resume data.
+- Return a valid JSON array—**no extra text, comments, or explanations.**
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
-In each form field you must add the following:
-- `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
-- `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
+## RESUME DATA:
 
-### Resume Data:
+Use this as your only source for filling values:
+
 {json.dumps(profile_data, indent=2)}
 
-### Special Rule for "Add" Buttons:
-- If there is an "Add" button (example: to add Education, Experience, Skills, etc.), you MUST click it multiple times.
-- The number of clicks should be (Total number of entries in Resume Data).
-- Example: If there are 3 Experiences in resume, and the form already shows 1 entry, you need to click "Add Experience" **2 times** (`times: 2`).
+## EXAMPLE 1:
 
-You MUST carefully go through the Resume Data and fill appropriate values.
+✅ Typing a City from Resume:
 
----
-Return ONLY a strict JSON array. No extra text, no explanation, no comments outside the array.
+If the field from Form Fields looks like:
+{{
+    "fieldType": "text",
+    "label": "City or Town",
+    "action": "type",
+    "selector": "#address--city",
+    "sectionLabel" : "Address", 
+    "sectionSelector" : "#Address-section"
+}}
+
+You should update it like:
+{{
+    "fieldType": "text",
+    "label": "City or Town",
+    "action": "type",
+    "selector": "#address--city",
+    "sectionLabel" : "Address", 
+    "sectionSelector" : "#Address-section",
+    "value":"London"
+}}
+
+## EXAMPLE 2:
+
+✅ Clicking Add Experience:
+
+If the field from Form Fields looks like:
+{{
+    "fieldType": "submit",
+    "label": "Add",
+    "action": "click",
+    "selector": "selectorexample",
+    "sectionLabel" : "Education", 
+    "sectionSelector" : "#Education-section"
+}}
+
+You should update it like(4 experience to be filled so 4 times click add button):
+{{
+    "fieldType": "submit",
+    "label": "Add",
+    "action": "click",
+    "selector": "selectorexample",
+    "sectionLabel" : "Education", 
+    "sectionSelector" : "#Education-section",
+    "times":4
+}}
+
+## FINAL INSTRUCTIONS:
+
+* Do NOT change any existing content, just add `value` or `times`.
+* Ensure the final response is a **pure JSON array**.
+* The output must be clean and directly parsable.
+
+Begin now.
 """
 
 
