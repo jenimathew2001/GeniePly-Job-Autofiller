@@ -278,6 +278,7 @@ Final JSON array must look like:
 - No guessing if Resume Data does not have the correct information
 
 Make sure to return all the fields that were given to you by adding value or times
+And don't do anything with other properties like selectors,labels etc. Return them as they are , all you are allowewd to do is add value and times
 and
 ONLY return the JSON array as final output.
 """
