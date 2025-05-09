@@ -95,8 +95,8 @@ autofill_json_schema = {
                     "label": {"type": "string"},
                     "action": {"type": "string"},
                     "selector": {"type": "string"},
-                    "sectionLabel": {"type": "string"},
-                    "sectionSelector": {"type": "string"},
+                    "sectionLabel": {"type": "string","default":""},
+                    "sectionSelector": {"type": "string","default":""},
                     "value": {"type": "string"},
                     "times": {"type": "integer"}
                 },
