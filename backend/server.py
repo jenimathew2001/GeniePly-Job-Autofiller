@@ -172,41 +172,43 @@ def get_user_profile(email):
 
 
 def generate_autofill_prompt(form_fields, profile_data):
+    experience_count = len(profile_data.get("experience", []))
+    education_count = len(profile_data.get("education", []))
     return f"""
-You are an intelligent assistant built to auto-fill job application forms based on resume data.
+You are a smart job application AI assistant.
 
-## OBJECTIVE:
-You will receive a list of form fields and a resume (in JSON format). Your job is to return **the exact same list of form fields**, but with appropriate additions:
-- `value`: (only if the field action is "type" or "select")
-- `times`: (only if the field action is "click", e.g., to add multiple items)
-
-## IMPORTANT RULES:
-- Do NOT remove, rename, or change any existing properties.
-- Do NOT touch anything else like `selector`, `label`, `sectionLabel`, etc.
-- You are ONLY allowed to **add** a `value` or `times` to each field, based strictly on the resume data.
-- Return a valid JSON array—**no extra text, comments, or explanations.**
+Your task is to update ONLY the following fields listed under "Form Fields" below.
 
 ### Form Fields:
 {json.dumps(form_fields, indent=2)}
 
-## RESUME DATA:
+In each form field you must add the following:
+- `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
+- `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
 
-Use this as your only source for filling values:
+### Special Rule for "Add" Buttons:
+- If there is an "Add" button (example: to add Education, Experience, Skills, etc.), you MUST click it multiple times.
+- The number of clicks should be (Total number of entries in Resume Data).
+  - For Experience: {experience_count} times
+  - For Education: {education_count} times
+  - (Assuming 0 field already exists on the form)
 
+You MUST carefully go through the Resume Data and fill appropriate values.
+
+### Resume Data:
 {json.dumps(profile_data, indent=2)}
 
-## EXAMPLE 1:
+---
+Return ONLY a strict JSON array. 
+No extra text, no explanation, no comments outside the array.
 
-✅ Typing a City from Resume:
-
-If the field from Form Fields looks like:
+Example 1:
+If a field from Form Fields looks like:
 {{
     "fieldType": "text",
     "label": "City or Town",
     "action": "type",
-    "selector": "#address--city",
-    "sectionLabel" : "Address", 
-    "sectionSelector" : "#Address-section"
+    "selector": "#address--city"
 }}
 
 You should update it like:
@@ -215,44 +217,57 @@ You should update it like:
     "label": "City or Town",
     "action": "type",
     "selector": "#address--city",
-    "sectionLabel" : "Address", 
-    "sectionSelector" : "#Address-section",
     "value":"London"
 }}
 
-## EXAMPLE 2:
-
-✅ Clicking Add Experience:
-
-If the field from Form Fields looks like:
+Example 2:
+If a field from Form Fields looks like:
 {{
     "fieldType": "submit",
     "label": "Add",
     "action": "click",
-    "selector": "selectorexample",
-    "sectionLabel" : "Education", 
-    "sectionSelector" : "#Education-section"
+    "selector": ".css-r6gqv6",
 }}
 
-You should update it like(4 experience to be filled so 4 times click add button):
+You should update it like({experience_count} experience to be filled and there is 1 existing fill, so {experience_count-1} times click add button):
 {{
     "fieldType": "submit",
     "label": "Add",
     "action": "click",
-    "selector": "selectorexample",
-    "sectionLabel" : "Education", 
-    "sectionSelector" : "#Education-section",
-    "times":4
+    "selector": ".css-r6gqv6",
+    "times":{experience_count-1}
 }}
 
-## FINAL INSTRUCTIONS:
+Example 3:
+Final JSON array must look like:
+[
+  {{
+    "fieldType": "text",
+    "label": "LinkedIn",
+    "action": "type",
+    "selector": "#socialNetworkAccounts--linkedInAccount",
+    "value":"https://www.linkedin.com/in/jeni-mathew-346253209/"
+  }},
+  {{
+    "fieldType": "submit",
+    "label": "Add",
+    "action": "click",
+    "selector": ".css-r6gqv6",
+    "times":{experience_count}
+  }}
+]
 
-* DO NOT skip any fields — if 20 fields are provided, you MUST return exactly 20 fields in your output, each updated accordingly.
-* Do NOT change any existing content, just add `value` or `times`.
-* Ensure the final response is a **pure JSON array**.
-* The output must be clean and directly parsable.
+---
 
-Begin now.
+🛑 STRICT JSON RULES:
+- No markdown formatting like ```json
+- No explanation text before or after JSON
+- No extra fields that are not listed under Form Fields
+- No guessing if Resume Data does not have the correct information
+
+Make sure to return all the fields that were given to you by adding value or times
+and
+ONLY return the JSON array as final output.
 """
 
 
@@ -263,6 +278,81 @@ def clean_output(data):
         if 'value' in item and item['value'] is None:
             del item['value']
     return data
+
+
+@app.route("/ai-autofill", methods=["POST"])
+def ai_autofill():
+    data = request.json
+    form_fields = data.get("form_fields", [])
+    profile_data = data.get("profile_data", {})
+
+    if not form_fields or not profile_data:
+        return jsonify({"error": "Missing form fields or profile data"}), 400
+
+    print("✅ Received Form Fields:", form_fields)
+    print("✅ Received Profile Data:", profile_data)
+
+    os.environ["GROQ_API_KEY"] = get_api_key()
+    try:
+        llm = init_chat_model("llama3-8b-8192", model_provider="groq",temperature=0)
+        print("✅ LLM Initialized")
+        print("📐 Setting Up Structured LLM Output...")
+        structured_llm = llm.with_structured_output(autofill_json_schema)
+    except Exception as e:
+        print(f"❌ LLM Initialization Error: {e}")
+        return {"error": "Failed to initialize LLM"}
+    
+    print("📝 Generating Prompt for LLM...")
+    
+    prompt = generate_autofill_prompt(form_fields, profile_data)
+    print("📜 Prompt Preview:\n", prompt[:30], "...")
+
+    try : 
+        structured_output = structured_llm.invoke(prompt)
+        structured_output = clean_output(structured_output)
+        print(structured_output)
+    except Exception as e:
+        print("Failed to invoke prompt",e)
+        return {"error": "Failed to invoke prompt"}
+
+    if not isinstance(structured_output['fields'], list):
+        print("Invalid JSON structure received from LLM",structured_output)
+        raise ValueError("Invalid JSON structure received from LLM")
+
+    print("✅ Structured Output Received",structured_output)
+
+    return jsonify(structured_output)
+
+
+
+# def estimate_tokens(text_or_dict):
+#     """Estimate token count using a basic heuristic (~4 chars/token)."""
+#     if isinstance(text_or_dict, dict):
+#         text_or_dict = json.dumps(text_or_dict)
+#     return len(str(text_or_dict)) // 4  # rough estimate
+
+# def chunk_form_fields(form_fields, profile_data, max_tokens=7000):
+#     profile_tokens = estimate_tokens(profile_data)
+#     instruction_tokens = 4000  # fixed rough estimate for the static instructions
+#     available_tokens = max_tokens - profile_tokens - instruction_tokens
+
+#     chunks = []
+#     current_chunk = []
+#     current_tokens = 0
+
+#     for field in form_fields:
+#         field_tokens = estimate_tokens(field)
+#         if current_tokens + field_tokens > available_tokens and current_chunk:
+#             chunks.append(current_chunk)
+#             current_chunk = []
+#             current_tokens = 0
+#         current_chunk.append(field)
+#         current_tokens += field_tokens
+
+#     if current_chunk:
+#         chunks.append(current_chunk)
+
+#     return chunks
 
 
 # @app.route("/ai-autofill", methods=["POST"])
@@ -281,106 +371,31 @@ def clean_output(data):
 #     try:
 #         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
 #         print("✅ LLM Initialized")
-#         print("📐 Setting Up Structured LLM Output...")
 #         structured_llm = llm.with_structured_output(autofill_json_schema)
 #     except Exception as e:
 #         print(f"❌ LLM Initialization Error: {e}")
-#         return {"error": "Failed to initialize LLM"}
-    
-#     print("📝 Generating Prompt for LLM...")
-    
-#     prompt = generate_autofill_prompt(form_fields, profile_data)
-#     print("📜 Prompt Preview:\n", prompt[:30], "...")
+#         return jsonify({"error": "Failed to initialize LLM"})
 
-#     try : 
-#         structured_output = structured_llm.invoke(prompt)
-#         structured_output = clean_output(structured_output)
-#         print(structured_output)
+#     # Chunk the fields to avoid context length issues
+#     try:
+#         field_chunks = chunk_form_fields(form_fields, profile_data)
+#         all_results = []
+
+#         for idx, chunk in enumerate(field_chunks):
+#             print(f"🚧 Processing chunk {idx+1}/{len(field_chunks)}")
+#             prompt = generate_autofill_prompt(chunk, profile_data)
+#             chunk_output = structured_llm.invoke(prompt)
+#             cleaned_output = clean_output(chunk_output)
+#             all_results.extend(cleaned_output.get("fields", []))
+
+#         if len(all_results) != len(form_fields):
+#             print("⚠️ Mismatch in field count:", len(all_results), "!=", len(form_fields))
+
+#         return jsonify({ "fields": all_results })
+
 #     except Exception as e:
-#         print("Failed to invoke prompt",e)
-#         return {"error": "Failed to invoke prompt"}
-
-#     if not isinstance(structured_output['fields'], list):
-#         print("Invalid JSON structure received from LLM",structured_output)
-#         raise ValueError("Invalid JSON structure received from LLM")
-
-#     print("✅ Structured Output Received",structured_output)
-
-#     return jsonify(structured_output)
-
-
-
-def estimate_tokens(text_or_dict):
-    """Estimate token count using a basic heuristic (~4 chars/token)."""
-    if isinstance(text_or_dict, dict):
-        text_or_dict = json.dumps(text_or_dict)
-    return len(str(text_or_dict)) // 4  # rough estimate
-
-def chunk_form_fields(form_fields, profile_data, max_tokens=7000):
-    profile_tokens = estimate_tokens(profile_data)
-    instruction_tokens = 4000  # fixed rough estimate for the static instructions
-    available_tokens = max_tokens - profile_tokens - instruction_tokens
-
-    chunks = []
-    current_chunk = []
-    current_tokens = 0
-
-    for field in form_fields:
-        field_tokens = estimate_tokens(field)
-        if current_tokens + field_tokens > available_tokens and current_chunk:
-            chunks.append(current_chunk)
-            current_chunk = []
-            current_tokens = 0
-        current_chunk.append(field)
-        current_tokens += field_tokens
-
-    if current_chunk:
-        chunks.append(current_chunk)
-
-    return chunks
-
-
-@app.route("/ai-autofill", methods=["POST"])
-def ai_autofill():
-    data = request.json
-    form_fields = data.get("form_fields", [])
-    profile_data = data.get("profile_data", {})
-
-    if not form_fields or not profile_data:
-        return jsonify({"error": "Missing form fields or profile data"}), 400
-
-    print("✅ Received Form Fields:", form_fields)
-    print("✅ Received Profile Data:", profile_data)
-
-    os.environ["GROQ_API_KEY"] = get_api_key()
-    try:
-        llm = init_chat_model("llama3-8b-8192", model_provider="groq")
-        print("✅ LLM Initialized")
-        structured_llm = llm.with_structured_output(autofill_json_schema)
-    except Exception as e:
-        print(f"❌ LLM Initialization Error: {e}")
-        return jsonify({"error": "Failed to initialize LLM"})
-
-    # Chunk the fields to avoid context length issues
-    try:
-        field_chunks = chunk_form_fields(form_fields, profile_data)
-        all_results = []
-
-        for idx, chunk in enumerate(field_chunks):
-            print(f"🚧 Processing chunk {idx+1}/{len(field_chunks)}")
-            prompt = generate_autofill_prompt(chunk, profile_data)
-            chunk_output = structured_llm.invoke(prompt)
-            cleaned_output = clean_output(chunk_output)
-            all_results.extend(cleaned_output.get("fields", []))
-
-        if len(all_results) != len(form_fields):
-            print("⚠️ Mismatch in field count:", len(all_results), "!=", len(form_fields))
-
-        return jsonify({ "fields": all_results })
-
-    except Exception as e:
-        print("❌ Failed during chunked LLM calls:", e)
-        return jsonify({"error": "Failed to invoke prompt"})
+#         print("❌ Failed during chunked LLM calls:", e)
+#         return jsonify({"error": "Failed to invoke prompt"})
 
 
 if __name__ == "__main__":
