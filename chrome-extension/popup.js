@@ -693,6 +693,23 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getProfileValue(field, profile) {
+        // Handle repeatable section add-buttons first
+        if (field.action === "click") {
+            const section = identifyRepeatableSection(field); // 'education', 'experience', or 'certifications'
+
+            if (section && Array.isArray(profile[section])) {
+                const profileCount = profile[section].length;
+
+                // Detect how many are already present in form
+                const existingCount = countExistingEntries(section, allFields);
+                const timesToClick = Math.max(0, profileCount - existingCount);
+
+                return { times: timesToClick };
+            }
+
+            return { times: 0 }; // Fallback if section not detected or empty
+        }
+            
         let value = "";
     
         // 🔹 Parse name
@@ -788,6 +805,39 @@ document.addEventListener("DOMContentLoaded", function () {
     
     function matchesKeyword(text, keywords) {
         return keywords.some(keyword => text.includes(keyword.toLowerCase()));
+    }
+
+    function identifyRepeatableSection(field) {
+        const fieldText = `${field.name} ${field.label} ${field.sectionLabel || ""}`.toLowerCase();
+    
+        if (fieldText.includes("education")) return "education";
+        if (fieldText.includes("experience")) return "experience";
+        if (fieldText.includes("certification")) return "certifications";
+    
+        return null;
+    }
+    
+    function countExistingEntries(section, fields) {
+        let identifierKeyword = "";
+    
+        switch (section) {
+            case "education":
+                identifierKeyword = "degree";
+                break;
+            case "experience":
+                identifierKeyword = "title";
+                break;
+            case "certifications":
+                identifierKeyword = "certification"; // Adjust if structure changes
+                break;
+        }
+    
+        const count = fields.filter(f => {
+            const text = `${f.name} ${f.label} ${f.sectionLabel || ""}`.toLowerCase();
+            return text.includes(section) && text.includes(identifierKeyword);
+        }).length;
+    
+        return count;
     }
     
     
