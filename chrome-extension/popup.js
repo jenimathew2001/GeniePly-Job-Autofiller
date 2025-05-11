@@ -595,6 +595,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
                 else if (action === "click") {
                     const repeat = times || 1;
+
+                    if (repeat <= 0) {
+                        console.log(`⛔ Skipping click on ${selector} (times = ${repeat})`);
+                        continue;
+                    }
+                    
                     for (let i = 0; i < repeat; i++) {
                         element.click();
                         // await new Promise(resolve => setTimeout(resolve, 500));
@@ -806,7 +812,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const index = match ? parseInt(match[1]) - 1 : -1;
             const cert = profile.certifications?.[index];
             if (cert) {
-                if (fieldText.includes("name")) return cert.name || "";
+                if (fieldText.includes("name")|| fieldText.includes("certification")) return cert.name || "";
                 if (fieldText.includes("issuer")) return cert.issuer || "";
                 if (fieldText.includes("date")) return cert.date || "";
             }
