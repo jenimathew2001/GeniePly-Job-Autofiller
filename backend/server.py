@@ -194,7 +194,7 @@ Form Fields:
 
 Resume Data:
 {json.dumps(profile_data, indent=2)}
-That’s it — only return the updated fields in JSON array format.
+That’s it — only return the updated fields in JSON array format, and follow strict json rules.
 """
 
 
@@ -221,7 +221,7 @@ def ai_autofill():
 
     os.environ["GROQ_API_KEY"] = get_api_key()
     try:
-        llm = init_chat_model("llama3-8b-8192", model_provider="groq",temperature=0.4)
+        llm = init_chat_model("llama3-8b-8192", model_provider="groq",temperature=0.3)
         print("✅ LLM Initialized")
         print("📐 Setting Up Structured LLM Output...")
         structured_llm = llm.with_structured_output(autofill_json_schema)
