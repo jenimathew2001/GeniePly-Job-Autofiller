@@ -179,6 +179,9 @@ You are a smart job application assistant.
 
 Your job is to update ONLY the fields listed in Form Fields below by using data from Resume Data.
 
+Form Fields:
+{json.dumps(form_fields, indent=2)}
+
 Instructions:
 - Add a "value" for fields with "action": "type" or "select", based on Resume Data.
 - For "click" actions like "Add Education" or "Add Experience", add a "times" value.
@@ -186,15 +189,15 @@ Instructions:
     - If no entries exist yet in the form, times = Total items in Resume Data section
 - DO NOT return the field if no value can be found.
 
-Return ONLY a JSON array of the updated fields.
-No extra text. No markdown. No explanation. No extra fields not in Form Fields.
-
-Form Fields:
-{json.dumps(form_fields, indent=2)}
-
 Resume Data:
 {json.dumps(profile_data, indent=2)}
-That’s it — only return the updated fields in JSON array format, and follow strict json rules.
+
+🛑 STRICT JSON RULES:
+- No markdown formatting like ```json
+- No explanation text before or after JSON
+- No extra fields that are not listed under Form Fields
+- No guessing if Resume Data does not have the correct information
+Return ONLY a strict JSON array of the updated fields.
 """
 
 
