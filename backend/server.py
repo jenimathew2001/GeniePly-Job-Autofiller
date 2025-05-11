@@ -184,6 +184,7 @@ Instructions:
 - For "click" actions like "Add Education" or "Add Experience", add a "times" value.
     - times = Total items in Resume Data section - already present form entries
     - If no entries exist yet in the form, times = Total items in Resume Data section
+- DO NOT return the field if no value can be found.
 
 Return ONLY a JSON array of the updated fields.
 No extra text. No markdown. No explanation. No extra fields not in Form Fields.

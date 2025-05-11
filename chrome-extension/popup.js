@@ -404,7 +404,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("candidate home") ||
                             name.includes("vendor") ||
                             name.includes("chkbox") ||
-                            (field.id && (field.id.toLowerCase().includes("language") || field.id.toLowerCase().includes("locale"))) // ✅ ignore by id
+                            idlower.includes("language") ||
+                            idlower.includes("settings")||
+                            idlower.includes("accountselector")
                         )
                     );
                 });
