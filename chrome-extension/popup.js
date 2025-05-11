@@ -454,7 +454,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const unknownFields = [];
     
                 for (const field of newFields) {
-                    const matchedValue = getProfileValue(field, profileData.cv_json);
+                    const matchedValue = getProfileValue(field, profileData.cv_json, newFields);
                     if (matchedValue) {
                         knownFields.push({ ...field, value: matchedValue });
                     } else {
@@ -692,7 +692,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return formStructure;
     }
 
-    function getProfileValue(field, profile) {
+    function getProfileValue(field, profile, allFields = []) {
         // Handle repeatable section add-buttons first
         if (field.action === "click") {
             const section = identifyRepeatableSection(field); // 'education', 'experience', or 'certifications'
