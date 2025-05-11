@@ -594,7 +594,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     filledFields.add(selector);
                 }
                 else if (action === "click") {
-                    const repeat = times || 1;
+                    const repeat = times ;
 
                     if (repeat <= 0) {
                         console.log(`⛔ Skipping click on ${selector} (times = ${repeat})`);
