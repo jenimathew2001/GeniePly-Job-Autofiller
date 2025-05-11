@@ -403,7 +403,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             label.includes("english") ||
                             label.includes("candidate home") ||
                             name.includes("vendor") ||
-                            name.includes("chkbox")
+                            name.includes("chkbox") ||
+                            (field.id && (field.id.toLowerCase().includes("language") || field.id.toLowerCase().includes("locale"))) // ✅ ignore by id
                         )
                     );
                 });

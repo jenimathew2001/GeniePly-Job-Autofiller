@@ -175,109 +175,25 @@ def generate_autofill_prompt(form_fields, profile_data):
     experience_count = len(profile_data.get("experience", []))
     education_count = len(profile_data.get("education", []))
     return f"""
-You are a smart job application AI assistant.
+You are a smart job application assistant.
 
-Your task is to update ONLY the following fields listed under "Form Fields" below.
+Your job is to update ONLY the fields listed in Form Fields below by using data from Resume Data.
 
-### Form Fields:
+Instructions:
+- Add a "value" for fields with "action": "type" or "select", based on Resume Data.
+- For "click" actions like "Add Education" or "Add Experience", add a "times" value.
+    - times = Total items in Resume Data section - already present form entries
+    - If no entries exist yet in the form, times = Total items in Resume Data section
+
+Return ONLY a JSON array of the updated fields.
+No extra text. No markdown. No explanation. No extra fields not in Form Fields.
+
+Form Fields:
 {json.dumps(form_fields, indent=2)}
 
-In each form field you must add the following:
-- `value`: required only for "type" and "select" actions (must be extracted from the Resume Data)
-- `times`: optional, only if "click" action needs to be repeated (e.g., clicking an "Add Education" button multiple times)
-
-### Special Rule for "Add" Buttons:
-- If there is an "Add" button (example: to add Education, Experience, Skills, etc.), you MUST click it multiple times.
-- The number of clicks should be (Total number of entries in Resume Data).
-- Example: If there are {experience_count} Experiences in resume, and the form already shows 1 entry, you need to click "Add Experience" **{experience_count-1} times** (`times: {experience_count-1}`).
-
-You MUST carefully go through the Resume Data and fill appropriate values.
-
-### Resume Data:
+Resume Data:
 {json.dumps(profile_data, indent=2)}
-
----
-Return ONLY a strict JSON array. 
-No extra text, no explanation, no comments outside the array.
-
-Example 1:
-If a field from Form Fields looks like:
-{{
-    "fieldType": "text",
-    "label": "City or Town",
-    "action": "type",
-    "selector": "#address--city",
-    "sectionLabel" : "Address", 
-    "sectionSelector" : "#Address-section"
-}}
-
-You should update it like:
-{{
-    "fieldType": "text",
-    "label": "City or Town",
-    "action": "type",
-    "selector": "#address--city",
-    "sectionLabel" : "Address", 
-    "sectionSelector" : "#Address-section",
-    "value":"London"
-}}
-
-Example 2:
-If a field from Form Fields looks like:
-{{
-    "fieldType": "submit",
-    "label": "Add",
-    "action": "click",
-    "selector": ".css-r6gqv6",
-    "sectionLabel" : "Education", 
-    "sectionSelector" : "#Education-section"
-}}
-
-You should update it like({education_count} education to be filled so {education_count} times click add button):
-{{
-    "fieldType": "submit",
-    "label": "Add",
-    "action": "click",
-    "selector": ".css-r6gqv6",
-    "sectionLabel" : "Education", 
-    "sectionSelector" : "#Education-section",
-    "times":{education_count}
-}}
-
-Example 3:
-A Final JSON array must look like:
-[
-  {{
-    "fieldType": "text",
-    "label": "LinkedIn",
-    "action": "type",
-    "selector": "#socialNetworkAccounts--linkedInAccount",
-    "sectionLabel" : "Social Network URLs", 
-    "sectionSelector" : "#Social-Network-URLs-section",
-    "value":"https://www.linkedin.com/in/jeni-mathew-346253209/"
-  }},
-  {{
-    "fieldType": "submit",
-    "label": "Add",
-    "action": "click",
-    "selector": ".css-r8h",
-    "sectionLabel" : "Experience", 
-    "sectionSelector" : "#Experience-section",
-    "times":{experience_count}
-  }}
-]
-
----
-
-🛑 STRICT JSON RULES:
-- No markdown formatting like ```json
-- No explanation text before or after JSON
-- No extra fields that are not listed under Form Fields
-- No guessing if Resume Data does not have the correct information
-
-Remember if n number of fields are being given to you I want only those updated n in the response!
-and
-ONLY return the JSON array as final output.
+That’s it — only return the updated fields in JSON array format.
 """
 
 
