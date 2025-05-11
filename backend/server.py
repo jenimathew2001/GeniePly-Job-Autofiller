@@ -221,7 +221,7 @@ def ai_autofill():
 
     os.environ["GROQ_API_KEY"] = get_api_key()
     try:
-        llm = init_chat_model("llama3-8b-8192", model_provider="groq",temperature=0.0)
+        llm = init_chat_model("llama3-8b-8192", model_provider="groq",temperature=0.4)
         print("✅ LLM Initialized")
         print("📐 Setting Up Structured LLM Output...")
         structured_llm = llm.with_structured_output(autofill_json_schema)
