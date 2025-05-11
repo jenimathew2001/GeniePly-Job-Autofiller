@@ -457,14 +457,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 const knownFields = [];
                 const unknownFields = [];
     
+                // for (const field of newFields) {
+                //     const matchedValue = getProfileValue(field, profileData.cv_json, newFields);
+                //     if (matchedValue) {
+                //         knownFields.push({ ...field, value: matchedValue });
+                //     } else {
+                //         unknownFields.push(field);
+                //     }
+                // }
+
                 for (const field of newFields) {
-                    const matchedValue = getProfileValue(field, profileData.cv_json, newFields);
-                    if (matchedValue) {
-                        knownFields.push({ ...field, value: matchedValue });
+                    const valueOrTimes = getProfileValue(field, profileData.cv_json, extractedFields);
+                
+                    if (field.action === "click" && typeof valueOrTimes === "number") {
+                        knownFields.push({ ...field, times: valueOrTimes });
+                    } else if (valueOrTimes) {
+                        knownFields.push({ ...field, value: valueOrTimes });
                     } else {
                         unknownFields.push(field);
                     }
                 }
+                
 
                 console.log("🆕 knownFields this round:", knownFields);
                 console.log("🆕 unknownFields this round:", unknownFields);
@@ -708,10 +721,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 const existingCount = countExistingEntries(section, allFields);
                 const timesToClick = Math.max(0, profileCount - existingCount);
 
-                return { times: timesToClick };
+                return timesToClick;
             }
 
-            return { times: 0 }; // Fallback if section not detected or empty
+            return 0; // Fallback if section not detected or empty
         }
             
         let value = "";
