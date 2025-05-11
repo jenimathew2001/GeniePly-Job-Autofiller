@@ -189,9 +189,7 @@ In each form field you must add the following:
 ### Special Rule for "Add" Buttons:
 - If there is an "Add" button (example: to add Education, Experience, Skills, etc.), you MUST click it multiple times.
 - The number of clicks should be (Total number of entries in Resume Data).
-  - For Experience: {experience_count} times
-  - For Education: {education_count} times
-  - (Assuming 0 field already exists on the form)
+- Example: If there are {experience_count} Experiences in resume, and the form already shows 1 entry, you need to click "Add Experience" **{experience_count-1} times** (`times: {experience_count-1}`).
 
 You MUST carefully go through the Resume Data and fill appropriate values.
 
@@ -235,7 +233,7 @@ If a field from Form Fields looks like:
     "sectionSelector" : "#Education-section"
 }}
 
-You should update it like({experience_count} experience to be filled and there is 1 existing fill, so {experience_count-1} times click add button):
+You should update it like({education_count} education to be filled so {education_count} times click add button):
 {{
     "fieldType": "submit",
     "label": "Add",
@@ -243,11 +241,11 @@ You should update it like({experience_count} experience to be filled and there i
     "selector": ".css-r6gqv6",
     "sectionLabel" : "Education", 
     "sectionSelector" : "#Education-section",
-    "times":{experience_count-1}
+    "times":{education_count}
 }}
 
 Example 3:
-Final JSON array must look like:
+A Final JSON array must look like:
 [
   {{
     "fieldType": "text",
@@ -262,9 +260,9 @@ Final JSON array must look like:
     "fieldType": "submit",
     "label": "Add",
     "action": "click",
-    "selector": ".css-r6gqv6",
-    "sectionLabel" : "..sectionLabel", 
-    "sectionSelector" : "..sectionSelector",
+    "selector": ".css-r8h",
+    "sectionLabel" : "Experience", 
+    "sectionSelector" : "#Experience-section",
     "times":{experience_count}
   }}
 ]
@@ -277,8 +275,7 @@ Final JSON array must look like:
 - No extra fields that are not listed under Form Fields
 - No guessing if Resume Data does not have the correct information
 
-Make sure to return all the fields that were given to you by adding value or times
-And don't do anything with other properties like selectors,labels etc. Return them as they are , all you are allowewd to do is add value and times
+Remember if n number of fields are being given to you I want only those updated n in the response!
 and
 ONLY return the JSON array as final output.
 """

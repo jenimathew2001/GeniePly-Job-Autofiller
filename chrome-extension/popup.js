@@ -385,6 +385,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         !(
                             label.includes("save") ||
                             label.includes("cookie") ||
+                            label.includes("change") ||
+                            label.includes("delete") ||
+                            label.includes("back") ||
                             label.includes("switch") ||
                             label.includes("settings") ||
                             label.includes("menu") ||
