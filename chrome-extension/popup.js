@@ -742,7 +742,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const fieldText = `${field.name} ${field.label} ${field.sectionLabel || ""} ${field.id || ""}`.toLowerCase();
         
         // Handle repeatable section add-buttons first
-        if (action === "click" && fieldText.includes('add')) {
+        if (action === "click") {
             const section = identifyRepeatableSection(field); // 'education', 'experience', or 'certifications'
 
             if (section && Array.isArray(profile[section])) {
