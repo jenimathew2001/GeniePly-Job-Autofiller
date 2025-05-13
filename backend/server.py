@@ -197,6 +197,8 @@ Resume Data:
 - No explanation text before or after JSON
 - No extra fields that are not listed under Form Fields
 - No guessing if Resume Data does not have the correct information
+- If the result is too large to return in one response, truncate cleanly at the last full field object. Do NOT return partial or broken JSON.
+
 Return ONLY a strict JSON array of the updated fields.
 """
 
@@ -209,6 +211,9 @@ def clean_output(data):
             del item['value']
     return data
 
+def chunk_form_fields(form_fields, chunk_size=20):
+    for i in range(0, len(form_fields), chunk_size):
+        yield form_fields[i:i + chunk_size]
 
 @app.route("/ai-autofill", methods=["POST"])
 def ai_autofill():
@@ -232,100 +237,32 @@ def ai_autofill():
         print(f"❌ LLM Initialization Error: {e}")
         return {"error": "Failed to initialize LLM"}
     
-    print("📝 Generating Prompt for LLM...")
+    final_filled_fields = []
+
+    for chunk in chunk_form_fields(form_fields, chunk_size=20):
+        print('CHUNK',chunk)
     
-    prompt = generate_autofill_prompt(form_fields, profile_data)
-    print("📜 Prompt Preview:\n", prompt[:30], "...")
+        print("📝 Generating Prompt for LLM...")
+        prompt = generate_autofill_prompt(chunk, profile_data)
+        print("📜 Prompt Preview:\n", prompt[:30], "...")
 
-    try : 
-        structured_output = structured_llm.invoke(prompt)
-        structured_output = clean_output(structured_output)
-        print(structured_output)
-    except Exception as e:
-        print("Failed to invoke prompt",e)
-        return {"error": "Failed to invoke prompt"}
+        try : 
+            structured_output = structured_llm.invoke(prompt)
+            structured_output = clean_output(structured_output)
+            print('STRUCTURED OUTPUT RECEIVED',structured_output)
+            final_filled_fields.extend(structured_output)
+            print('FINAL LIST COMBINED OUTPUTS',final_filled_fields)
+        except Exception as e:
+            print("Failed to invoke prompt",e)
+            return {"error": "Failed to invoke prompt"}
 
-    if not isinstance(structured_output['fields'], list):
-        print("Invalid JSON structure received from LLM",structured_output)
+    if not isinstance(final_filled_fields, list):
+        print("Invalid JSON structure received from LLM",final_filled_fields)
         raise ValueError("Invalid JSON structure received from LLM")
 
-    print("✅ Structured Output Received",structured_output)
+    print("✅ Structured Output Received",final_filled_fields)
 
-    return jsonify(structured_output)
-
-
-
-# def estimate_tokens(text_or_dict):
-#     """Estimate token count using a basic heuristic (~4 chars/token)."""
-#     if isinstance(text_or_dict, dict):
-#         text_or_dict = json.dumps(text_or_dict)
-#     return len(str(text_or_dict)) // 4  # rough estimate
-
-# def chunk_form_fields(form_fields, profile_data, max_tokens=7000):
-#     profile_tokens = estimate_tokens(profile_data)
-#     instruction_tokens = 4000  # fixed rough estimate for the static instructions
-#     available_tokens = max_tokens - profile_tokens - instruction_tokens
-
-#     chunks = []
-#     current_chunk = []
-#     current_tokens = 0
-
-#     for field in form_fields:
-#         field_tokens = estimate_tokens(field)
-#         if current_tokens + field_tokens > available_tokens and current_chunk:
-#             chunks.append(current_chunk)
-#             current_chunk = []
-#             current_tokens = 0
-#         current_chunk.append(field)
-#         current_tokens += field_tokens
-
-#     if current_chunk:
-#         chunks.append(current_chunk)
-
-#     return chunks
-
-
-# @app.route("/ai-autofill", methods=["POST"])
-# def ai_autofill():
-#     data = request.json
-#     form_fields = data.get("form_fields", [])
-#     profile_data = data.get("profile_data", {})
-
-#     if not form_fields or not profile_data:
-#         return jsonify({"error": "Missing form fields or profile data"}), 400
-
-#     print("✅ Received Form Fields:", form_fields)
-#     print("✅ Received Profile Data:", profile_data)
-
-#     os.environ["GROQ_API_KEY"] = get_api_key()
-#     try:
-#         llm = init_chat_model("llama3-8b-8192", model_provider="groq")
-#         print("✅ LLM Initialized")
-#         structured_llm = llm.with_structured_output(autofill_json_schema)
-#     except Exception as e:
-#         print(f"❌ LLM Initialization Error: {e}")
-#         return jsonify({"error": "Failed to initialize LLM"})
-
-#     # Chunk the fields to avoid context length issues
-#     try:
-#         field_chunks = chunk_form_fields(form_fields, profile_data)
-#         all_results = []
-
-#         for idx, chunk in enumerate(field_chunks):
-#             print(f"🚧 Processing chunk {idx+1}/{len(field_chunks)}")
-#             prompt = generate_autofill_prompt(chunk, profile_data)
-#             chunk_output = structured_llm.invoke(prompt)
-#             cleaned_output = clean_output(chunk_output)
-#             all_results.extend(cleaned_output.get("fields", []))
-
-#         if len(all_results) != len(form_fields):
-#             print("⚠️ Mismatch in field count:", len(all_results), "!=", len(form_fields))
-
-#         return jsonify({ "fields": all_results })
-
-#     except Exception as e:
-#         print("❌ Failed during chunked LLM calls:", e)
-#         return jsonify({"error": "Failed to invoke prompt"})
+    return jsonify(final_filled_fields)
 
 
 if __name__ == "__main__":

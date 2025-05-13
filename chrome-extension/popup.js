@@ -738,8 +738,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getProfileValue(field, profile, allFields = []) {
+
+        const fieldText = `${field.name} ${field.label} ${field.sectionLabel || ""} ${field.id || ""}`.toLowerCase();
+    
         // Handle repeatable section add-buttons first
-        if (field.action === "click") {
+        if (field.action === "click" && fieldText == 'add') {
             const section = identifyRepeatableSection(field); // 'education', 'experience', or 'certifications'
 
             if (section && Array.isArray(profile[section])) {
@@ -787,7 +790,7 @@ document.addEventListener("DOMContentLoaded", function () {
             skills: ["skills", "expertise", "abilities"]
         };
     
-        const fieldText = `${field.name} ${field.label} ${field.sectionLabel || ""} ${field.id || ""}`.toLowerCase();
+        // const fieldText = `${field.name} ${field.label} ${field.sectionLabel || ""} ${field.id || ""}`.toLowerCase();
     
         // 🔹 Basic match
         if (matchesKeyword(fieldText, keywordMappings["email"])) return fieldMappings["email"];
