@@ -236,6 +236,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            document.getElementById("upload-section").classList.add("hidden");
+
             const profileData = data.cv_json; // Accessing the second object
             console.log('!!!!!view button data data.cv_json',data.cv_json['name'])
             console.log('!!!!!view button data data[cv_json]',data['cv_json']['name'])
@@ -318,6 +320,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("autofill-button").addEventListener("click", function () {
         console.log("🔹 Autofill button clicked!");
+
+        // Show loading, hide upload
+        document.getElementById("upload-section").classList.add("hidden");
+        document.getElementById("loading").style.display = "block";
     
         chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
             if (!tabs[0]) {
@@ -326,6 +332,8 @@ document.addEventListener("DOMContentLoaded", function () {
             }
     
             const tabId = tabs[0].id;
+
+            try{
             const filledSelectors = new Set();
             const sectionSelectors = new Set();
             let loopCounter = 0;
@@ -531,6 +539,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 
             }
+            } catch(err){
+                console.error("❌ Error during autofill:", err);
+
+            } finally{
+
+            // ✅ After autofill process ends
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("upload-section").classList.remove("hidden");}
+
     
             console.log("✅ Autofill process complete.");
         });
