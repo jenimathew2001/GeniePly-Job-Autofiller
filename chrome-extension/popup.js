@@ -491,26 +491,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.log("🆕 knownFields this round:", knownFields);
                 console.log("🆕 unknownFields this round:", unknownFields);
+
+                
     
                 // 6. AI fill for unknown fields
                 let aiFilledData = [];
                 // console.log('formfields',unknownFields)
                 // console.log('profiledata',profileData.cv_json)
     
-                // if (unknownFields.length > 0) {
-                //     const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
-                //         method: "POST",
-                //         headers: { "Content-Type": "application/json" },
-                //         body: JSON.stringify({ form_fields: unknownFields, profile_data: profileData.cv_json })
-                //     });
+                if (unknownFields.length > 0) {
+                    const aiResponse = await fetch("https://genieply.onrender.com/ai-autofill", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ form_fields: unknownFields, profile_data: profileData.cv_json })
+                    });
     
-                //     const aiResult = await aiResponse.json();
-                //     aiFilledData = aiResult?.fields || [];
-                //     console.log("🤖 AI Filled:", aiFilledData);
-                // }
+                    const aiResult = await aiResponse.json();
+                    aiFilledData = aiResult?.fields || [];
+                    console.log("🤖 AI Filled:", aiFilledData);
+                }
     
-                // const finalFields = [...knownFields, ...aiFilledData];
-                const finalFields = [...knownFields];
+                const finalFields = [...knownFields, ...aiFilledData];
+                // const finalFields = [...knownFields];
     
                 if (finalFields.length === 0) {
                     console.log("⚠️ No values available to autofill. Skipping this round.");
@@ -521,7 +523,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const results = await chrome.scripting.executeScript({
                     target: { tabId },
                     function: executeAgentPlan,
-                    args: [finalFields]  // 🚨 YOU NEED TO MAKE executeAgentPlan RETURN list of filled selectors
+                    args: [knownFields]  // 🚨 YOU NEED TO MAKE executeAgentPlan RETURN list of filled selectors
                 });
     
                 // const newlyFilled = results?.[0]?.result || [];
