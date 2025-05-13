@@ -219,6 +219,10 @@ hr {
     display: none;
     text-align: center;
 }
+#autofilling {
+    display: none;
+    text-align: center;
+}
 
 .spinner {
     border: 4px solid rgba(0, 0, 0, 0.2);
