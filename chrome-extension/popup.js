@@ -323,7 +323,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Show loading, hide upload
         document.getElementById("upload-section").classList.add("hidden");
-        document.getElementById("loading").style.display = "block";
+        document.getElementById("autofilling").style.display = "block";
     
         chrome.tabs.query({ active: true, currentWindow: true }, async function (tabs) {
             if (!tabs[0]) {
@@ -545,7 +545,7 @@ document.addEventListener("DOMContentLoaded", function () {
             } finally{
 
             // ✅ After autofill process ends
-            document.getElementById("loading").style.display = "none";
+            document.getElementById("autofilling").style.display = "none";
             document.getElementById("upload-section").classList.remove("hidden");}
 
     
