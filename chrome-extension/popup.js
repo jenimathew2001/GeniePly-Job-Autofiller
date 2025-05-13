@@ -740,9 +740,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function getProfileValue(field, profile, allFields = []) {
 
         const fieldText = `${field.name} ${field.label} ${field.sectionLabel || ""} ${field.id || ""}`.toLowerCase();
-        console.log(fieldText)
+        
         // Handle repeatable section add-buttons first
-        if (action === "click" && fieldText == 'add') {
+        if (action === "click" && fieldText.includes('add')) {
             const section = identifyRepeatableSection(field); // 'education', 'experience', or 'certifications'
 
             if (section && Array.isArray(profile[section])) {
