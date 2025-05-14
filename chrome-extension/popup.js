@@ -680,7 +680,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
     
-            // Fallback: check for nearby text in a div
+            // Fallback: check for nearby text in a div, Nearby spans or strong/b
             if (!label) {
                 let parentDiv = field.closest("div");
                 if (parentDiv) {
@@ -690,6 +690,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             }
+
+            // 🔥 6. Custom fallback: Look for label in previous siblings or parent
+            if (!label) {
+                let current = field;
+                for (let i = 0; i < 3; i++) { // check up to 3 levels up
+                    if (!current.parentElement) break;
+                    let siblingLabel = Array.from(current.parentElement.children).find(el =>
+                        el.tagName === "LABEL" && el.innerText.trim().length > 0
+                    );
+                    if (siblingLabel) {
+                        label = siblingLabel.innerText.trim();
+                        break;
+                    }
+                    current = current.parentElement;
+                }
+            }
+
+            
     
             // Last resort: use placeholder or button text
             if (!label) {
