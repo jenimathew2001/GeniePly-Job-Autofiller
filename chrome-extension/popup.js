@@ -691,21 +691,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
 
-            // 🔥 6. Custom fallback: Look for label in previous siblings or parent
+            // 🔥 6. SPECIAL CASE: Custom component like <crux-text-component>
             if (!label) {
-                let current = field;
-                for (let i = 0; i < 3; i++) { // check up to 3 levels up
-                    if (!current.parentElement) break;
-                    let siblingLabel = Array.from(current.parentElement.children).find(el =>
-                        el.tagName === "LABEL" && el.innerText.trim().length > 0
-                    );
-                    if (siblingLabel) {
-                        label = siblingLabel.innerText.trim();
-                        break;
+                const customComponent = field.closest("crux-text-component, crux-picklist-component");
+                if (customComponent) {
+                    const outerWrapper = customComponent.closest("div.crc-form-row");
+                    if (outerWrapper) {
+                        const possibleLabel = outerWrapper.querySelector("label");
+                        if (possibleLabel) {
+                            label = possibleLabel.innerText.trim();
+                        }
+                }
+                    // Fallback: use cx-prop-label attribute
+                    if (!label && customComponent.hasAttribute("cx-prop-label")) {
+                        label = customComponent.getAttribute("cx-prop-label").trim();
                     }
-                    current = current.parentElement;
                 }
             }
+
+            
 
             
     
