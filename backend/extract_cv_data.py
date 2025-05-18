@@ -2,8 +2,8 @@ import pdfplumber
 import json
 import os
 from langchain.chat_models import init_chat_model
-# from backend.schema import json_schema
-from schema import json_schema
+from backend.schema import json_schema
+# from schema import json_schema
 def get_api_key(file_path="backend/groq_api_key.txt"):
 # def get_api_key(file_path="groq_api_key.txt"):
     """Reads and validates API key from a file."""
