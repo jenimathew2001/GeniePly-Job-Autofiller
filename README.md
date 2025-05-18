@@ -41,7 +41,7 @@ GeniePly is a Chrome extension + backend service that **automatically fills out 
 
 ## 🧠 Tech Stack
 
-- **Frontend**: Chrome Extension (`popup.js`)
+- **Frontend**: Chrome Extension (`popup.js`,`popup.html`,`styles.css`)
 - **Backend**: Flask + Supabase (`server.py`,`extract_cv_data.py`)
 - **LLM Integration**: Groq + LLaMA3
 
