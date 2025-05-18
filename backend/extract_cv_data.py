@@ -2,8 +2,8 @@ import pdfplumber
 import json
 import os
 from langchain.chat_models import init_chat_model
-from backend.schema import json_schema
-# from schema import json_schema
+# from backend.schema import json_schema
+from schema import json_schema
 def get_api_key(file_path="backend/groq_api_key.txt"):
 # def get_api_key(file_path="groq_api_key.txt"):
     """Reads and validates API key from a file."""
@@ -72,13 +72,16 @@ def save_json(data, filename="structured_resume.json"):
 def get_json_resume(cv_text):
     """Processes CV text and returns structured JSON output."""
     print("🔑 Fetching API Key...")
-    api_key = get_api_key()
+    # api_key = get_api_key()
+
+    api_key = os.environ.get("GROQ_API_KEY")
+
     if not api_key:
         return {"error": "Missing API Key"}
     
-    print(f"📝 API Key Retrieved: {api_key if api_key else '❌ MISSING!'}")
+    # print(f"📝 API Key Retrieved: {api_key if api_key else '❌ MISSING!'}")
 
-    os.environ["GROQ_API_KEY"] = api_key
+    # os.environ["GROQ_API_KEY"] = api_key
 
     print("🤖 Initializing LLM Model...")
     try : 
