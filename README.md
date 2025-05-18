@@ -41,21 +41,87 @@ GeniePly is a Chrome extension + backend service that **automatically fills out 
 
 ## 🧠 Tech Stack
 
-- **Frontend**: Chrome Extension (`popup.js`,`popup.html`,`styles.css`)
-- **Backend**: Flask + Supabase (`server.py`,`extract_cv_data.py`)
-- **LLM Integration**: Groq + LLaMA3
+| Layer       | Technology                                |
+|-------------|--------------------------------------------|
+| Frontend    | Chrome Extension (`popup.js`, `popup.html`, `styles.css`) |
+| Backend     | Flask (`server.py`), Supabase for DB/storage |
+| CV Parsing  | `extract_cv_data.py` using pdfplumber + Groq LLaMA3 |
+| AI Model    | Groq API (LLaMA 3) |
+| Database    | Supabase |
 
 ---
 
 ## 🚀 Getting Started
 
-1. Clone the repo:  
-   ```bash
-   git clone https://github.com/jenimathew2001/GeniePly-Job-Autofiller
-   cd GeniePly-Job-Autofiller
-2. Load the Chrome Extension:
+### 1. Clone the Repo
 
-🙋‍♀️ Author
+```bash
+git clone https://github.com/jenimathew2001/GeniePly-Job-Autofiller
+cd GeniePly-Job-Autofiller
+```
+
+### 2. Backend Setup (Flask API)
+
+#### ✅ For Local Development
+
+1. **Create a `.env` file** in the root directory with the following content:
+
+    ```ini
+    GROQ_API_KEY=your-groq-api-key
+    SUPABASE_URL=https://your-project.supabase.co
+    SUPABASE_KEY=your-supabase-service-role-key
+    ```
+
+    > ⚠️ **Never commit your `.env` or API keys to GitHub.**
+
+2. **Install dependencies:**
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3. **Start the Flask server:**
+
+    ```bash
+    python server.py
+    ```
+
+#### 🚀 Deploy to Render
+
+1. **Push this repo to your GitHub account.**
+2. Go to [https://render.com](https://render.com)
+3. Create a new Web Service and connect your repo.
+4. Set the following commands:
+    - Build Command: (Leave empty or set as needed)
+    - **Start Command:**
+      ```bash
+      gunicorn backend.server:app
+      ```
+5. **Add the Environment Variables in Render**
+
+### 3. Frontend Setup (Chrome Extension)
+
+1. Open Google Chrome
+2. Go to: `chrome://extensions`
+3. Enable Developer Mode (top-right)
+4. Click Load unpacked
+5. Select the `chrome-extension/` folder containing:
+    - `manifest.json`
+    - `popup.html`
+    - `popup.js`
+    - `styles.css`
+
+### 4. Usage
+
+1. Open the extension popup.
+2. Sign up or log in.
+3. Upload your CV (**PDF**).
+4. Visit any job application form.
+5. Click **Autofill** to automatically populate the fields.
+
+---
+
+## 🙋‍♀️ Author
 Built by @jenimathew2001
 
-📸 Demo
+## 📸 Demo
